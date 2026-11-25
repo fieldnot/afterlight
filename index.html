@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="theme-color" content="#10191e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Afterlight">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
-<title>Afterlight: Dominion V5.3</title>
+<title>Afterlight: Dominion V5.4</title>
 <style>
 :root{
   --bg:#0c1214; --panel:#162024; --panel2:#1a252b; --line:#314148; --text:#e8eee8; --muted:#93a7a0;
@@ -161,7 +165,7 @@ button:focus-visible{outline:2px solid #f2d08b;outline-offset:2px}
       <div class="brand">
         <small>COLONY NETWORK // SECTOR 07</small><button type="button" data-profile="open" id="profileBadge" class="profileBadge">Commander</button>
         <h1>AFTERLIGHT</h1>
-        <div class="mini">DOMINION V5.3 · MAP-FIRST SURVIVAL STRATEGY</div>
+        <div class="mini">DOMINION V5.4 · MAP-FIRST SURVIVAL STRATEGY</div>
       </div>
       <div class="center">
         <div class="small">Power</div>
@@ -275,16 +279,30 @@ const fresh=()=>({
   guards:0,drones:0,injured:0,territory:[],alliance:null,allianceCoins:0,donations:0,
   flags:{knock:false,refugees:false},chapter:0,dailyClaimed:[],dailySeed:new Date().toDateString(),message:'The core hums to life. Commander, your bunker awaits.'
 });
+
+function parseCivilizationSave(raw){
+ const p=JSON.parse(raw),base=fresh();
+ const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ if(!record(p)||!record(p.l)||!record(p.res)||!Array.isArray(p.commanders))throw Error('Invalid civilization save');
+ for(const k of ['res','l','inv'])if(p[k]!==undefined&&(!record(p[k])||Object.values(p[k]).some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0)))throw Error('Invalid '+k+' values');
+ if(!Number.isInteger(p.l.core)||p.l.core<1||p.commanders.some(i=>!Number.isInteger(i)||i<0||i>=commanders.length))throw Error('Invalid commander or core data');
+ for(const k of ['territory','armies','reports','dailyClaimed','achievementClaims'])if(p[k]!==undefined&&!Array.isArray(p[k]))throw Error('Invalid '+k);
+ for(const k of ['cmdLv','cmdGear','flags','skills','familyNames','allianceTech','brotherRanks','surface','legendGear'])if(p[k]!==undefined&&!record(p[k]))throw Error('Invalid '+k);
+ if(p.queue!=null&&(!record(p.queue)||!defs.some(d=>d.id===p.queue.id)||!Number.isFinite(p.queue.end)))throw Error('Invalid construction queue');
+ const result={...base,...p,res:{...base.res,...p.res},l:{...base.l,...p.l},inv:{...base.inv,...p.inv},flags:{...base.flags,...p.flags}};
+ if(!Number.isFinite(result.last)||result.last<=0)result.last=Date.now();
+ return result;
+}
 let s=fresh();
-const key='afterlight_v04';
-let storage=true, tab='HQ', selected=null;
+const key='afterlight_v04',backupKey=key+'_recovery';
+let storage=true,tab='HQ',selected=null,saveBlocked=false,recoveryMessage='',lastBackupAt=0;
 try{
-  const raw=localStorage.getItem(key);
-  if(raw){
-    const parsed=JSON.parse(raw);
-    if(parsed && parsed.l && parsed.res) s=Object.assign(fresh(), parsed);
-  }
-}catch(e){storage=false}
+ const raw=localStorage.getItem(key);
+ if(raw){try{s=parseCivilizationSave(raw);}catch(err){
+  const backup=localStorage.getItem(backupKey);
+  try{if(!backup)throw Error('No recovery copy');s=parseCivilizationSave(backup);recoveryMessage='Recovered from the previous local backup. Original save preserved.';saveBlocked=true;}catch(e){recoveryMessage='Local save could not be read. Original data preserved; saving is paused.';saveBlocked=true;}
+ }}
+}catch(e){storage=false;saveBlocked=true;recoveryMessage='Device storage is unavailable. Saving is paused.';}
 s.ver='2.0'; s.familyNames??={}; s.awakening??=null; for(const c of commanders.slice(4)){if(s.familyNames[c.id])c.name=s.familyNames[c.id];} s.skills??={};s.crafted??=0;s.frontierChoice??=null; s.elites??=0; s.reports??=[]; s.scouted??=[]; s.training??=null; s.campaignWins??=0;
 s.l.turret??=0;s.l.shield??=0;s.cyber??=0;s.sentinels??=0;s.protocol??=null;s.raid??=null;s.raidWins??=0;s.promotions??={};s.raidCooldown??=0;
 s.brotherRanks??={4:0,5:0,6:0};s.brotherBonded??=false;s.legacyOath??=null;s.gather??=null;s.gathered??=0;s.familyMarches??=0;
@@ -422,8 +440,31 @@ document.addEventListener('click',e=>{
  if(a==='claim'&&!s.tutorialRewardClaimed&&tutorialSteps().every(x=>x.done)){s.tutorialRewardClaimed=true;reward({alloy:150,manuals:2});s.message='EVA: Command training complete.';save();closeSheet();render();}
 });
 
+
+function downloadSave(raw,name){const u=URL.createObjectURL(new Blob([raw],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function recoverySheet(){
+ openSheet('<button class="close" data-act="close">Close ✕</button><h2>Save & recovery</h2><p>'+safeBattleText(recoveryMessage||'Local saves are active. A previous valid snapshot is retained periodically.')+'</p><div class="card"><button data-recovery="export">Export current civilization</button><button data-recovery="original">Export stored original</button><button data-recovery="restore">Restore previous snapshot</button>'+(saveBlocked?'<button data-recovery="resume">Resume saving current civilization</button>':'')+'</div><div class="card"><label for="importSave">Import a local JSON backup</label><input id="importSave" type="file" accept=".json,application/json"><button data-recovery="import">Validate and restore</button><p id="recoveryStatus" role="status"></p></div><div class="card"><h3>Install on your phone</h3><p>iPhone Safari: Share → Add to Home Screen. Android Chrome: menu → Add to Home screen or Install app, if available.</p></div>');
+}
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-recovery]');if(!b||b.disabled)return;b.disabled=true;
+ try{const a=b.dataset.recovery;
+ if(a==='open'){recoverySheet();return;}
+ if(a==='export'){downloadSave(JSON.stringify(s,null,2),'afterlight-save.json');return;}
+ if(a==='original'){const raw=localStorage.getItem(key);if(!raw)throw Error('No stored original');downloadSave(raw,'afterlight-original.json');return;}
+ let raw;
+ if(a==='restore'){raw=localStorage.getItem(backupKey);if(!raw)throw Error('No previous snapshot yet');}
+ else if(a==='import'){const f=$('importSave')?.files?.[0];if(!f||f.size>2000000)throw Error('Choose a JSON backup under 2 MB');raw=await f.text();}
+ else if(a==='resume'){raw=JSON.stringify(s);}
+ else return;
+ const valid=parseCivilizationSave(raw);
+ if(!confirm('Replace the current local save? Export it first if you want to retain it.'))return;
+ const original=localStorage.getItem(key);if(original){try{localStorage.setItem(key+'_before_restore',original);}catch(e){throw Error('Unable to preserve the original save. Restore cancelled.');}}
+ localStorage.setItem(key,JSON.stringify(valid));location.reload();
+ }catch(err){const el=$('recoveryStatus');if(el)el.textContent=err.message||'Recovery failed';else gameFeedback(err.message||'Recovery failed');}finally{b.disabled=false;}
+});
+
 function settingsSheet(){
- openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-guide="show">Show beginner guide</button> <button data-profile="open">Player profile</button> <button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
+ openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-recovery="open">Save &amp; recovery</button> <button data-guide="show">Show beginner guide</button> <button data-profile="open">Player profile</button> <button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-polish]');if(!b||b.disabled)return;
@@ -449,7 +490,7 @@ function setCount(i,kind,st=s){return (st.legendGear?.[i]||[]).filter(x=>x.start
 function setBonus(kind,st=s){return st.commanders.reduce((n,i)=>n+(setCount(i,kind,st)===2?1:0),0);}
 function legendaryPanel(){const req=60+s.bossWins*25;return `<div class="panel"><div class="head"><b>LEGENDARY DOMINION</b><span class="pill">Boss victories ${s.bossWins}</span></div><div class="body list"><div class="card"><h3>⚔ Leviathan · repeatable boss</h3><p>AI Core 3 · Enemy strength ${req} · Costs 100 energy. Deploy 30 seconds; your available troops and leaders determine the result. Rewards: 4 parts, 2 manuals, 300 alloy, 25 diamonds.</p><p>${s.bossRun?'Battle underway · '+timeLeft(s.bossRun.end):Date.now()<s.bossCooldown?'Recovering · '+timeLeft(s.bossCooldown):'Ready for battle'}</p><button data-act="legendboss" ${s.l.core<3||s.bossRun||s.armies.length||Date.now()<s.bossCooldown||s.res.energy<100||unitsHome()<1?'disabled':''}>Challenge Leviathan</button> <button data-act="reports">Battle reports</button></div><div class="card"><h3>Legendary equipment sets</h3><p>Workshop 3. Craft two matching pieces to activate a set. Each commander has two additional legendary slots.</p>${s.commanders.map(i=>`<div class="card"><b>${safeBattleText(commanders[i].name)}</b><p>${(s.legendGear[i]||[]).map(safeBattleText).join(' · ')||'No legendary gear'}</p>${legendarySets.map((g,j)=>`<p style="color:${g.color}">${g.name} · ${['+20 defense','+12 march power','+0.5 energy/sec'][j]}</p>${['armor','module'].map(piece=>`<button data-act="legendcraft:${i}:${j}:${piece}" ${s.l.forge<3||(s.legendGear[i]||[]).length>=2||(s.legendGear[i]||[]).includes(j+':'+piece)||!canAfford({parts:3,alloy:300})?'disabled':''}>${piece} · 3 parts / 300 alloy</button>`).join(' ')}`).join('')}</div>`).join('')||'Recruit a commander first.'}</div><div class="card"><h3>Signature abilities</h3><p>Each recruited brother can activate a unique ability once every 10 minutes.</p>${[4,5,6].map((i,j)=>`<p>${safeBattleText(commanders[i].name)} · ${['Heal up to 3 injured guards','Collect 150 alloy','Collect 200 energy'][j]} <button data-act="legendability:${i}" ${!s.commanders.includes(i)||Date.now()<(s.abilityCooldown[i]||0)?'disabled':''}>${Date.now()<(s.abilityCooldown[i]||0)?timeLeft(s.abilityCooldown[i]):'Activate'}</button></p>`).join('')}</div><div class="card"><h3>HQ skins</h3><p>Visual themes earned through VIP progression.</p>${[['steel','Steel · free',1],['gold','Imperial Gold · VIP 5',5],['ice','Arctic Blue · VIP 10',10],['crimson','Crimson Dominion · VIP 20',20]].map(([id,name,level])=>`<button data-act="legendskin:${id}" ${s.vip<level||s.skin===id?'disabled':''}>${name}${s.skin===id?' ✓':''}</button>`).join(' ')}</div></div></div>`;}
 function defense(){return setBonus(0)*20+(s.commanders.includes(4)?12:0)+(s.brotherRanks?.[4]||0)*8+Math.max(0,armyPower()-(unitsHome()-freePower()))+s.l.wall*12+s.l.turret*30+s.l.shield*40+(s.protocol==='guardian'?25:0)+(s.brotherBonded?15:0)+s.allianceTech.fortification*10}
-function save(){try{localStorage.setItem(key,JSON.stringify(s))}catch(e){storage=false}}
+function save(){if(saveBlocked)return;try{const now=Date.now(),raw=JSON.stringify(s);if(now-lastBackupAt>=60000){const prev=localStorage.getItem(key);if(prev){try{parseCivilizationSave(prev);localStorage.setItem(backupKey,prev);}catch(e){}}lastBackupAt=now;}localStorage.setItem(key,raw);storage=true;}catch(e){storage=false;}}
 function prodRates(){
   return {
     food:surfaceRate('food')+s.l.farm*0.72 + s.people*0.02,
@@ -859,7 +900,7 @@ document.addEventListener('click',e=>{
    if(tab==='Inventory'){renderInventory();$('view').insertAdjacentHTML('afterbegin','<div class="panel"><div class="body"><button data-act="tab:Legendary">♜ Legendary Dominion</button> <button data-act="cloud">☁ Connected Worlds</button></div></div>');} if(tab==='Legendary') $('view').innerHTML=legendaryPanel(); document.body.dataset.skin=s.skin;
    if(tab==='Shared') renderSharedWorld(); if(tab==='Surface') renderSurface(); if(tab==='Frontier') renderFrontier(); if(tab==='AI') renderAI(); if(tab==='AI') renderWarPanel(); if(tab==='Alliance')renderOnlineAlliance(); if(tab==='PvP'){$('view').innerHTML='<div class="panel"><div class="head"><b>WAR THEATER</b><span class="pill">Training / PvE</span></div><div class="body"><p>Practice combat against hostile factions. Online troop combat beta is accessible in Genesis. Supply loot and hospital recovery are enabled; rankings are pending.</p><button data-act="tab:Shared">Genesis online march beta</button><button data-act="tab:World">Open solo battle map</button></div></div>';renderWarPanel();}
    scrolls.forEach(([c,x])=>{const el=document.querySelector('.'+c);if(el)el.scrollLeft=x;});
-   $('footer').textContent=`AFTERLIGHT: DOMINION V5.3 · ${storage?'Local save active':'Storage blocked; session only'} · Built mobile-first for GitHub Pages.`;
+   $('footer').textContent=`AFTERLIGHT: DOMINION V5.4 · ${saveBlocked?'Saving paused · open Settings → Save & recovery':storage?'Local save active':'Storage blocked; session only'} · Built mobile-first for GitHub Pages.`;
  }
  function renderWarPanel(){const raid=s.raid; $('view').insertAdjacentHTML('beforeend',`<div class="panel"><div class="head"><b>RISE OF THE MACHINES</b><span class="pill">Defense ${defense()}</span></div><div class="body list"><div class="card"><h3>Enemy signal</h3><p>${raid?raid.name+' incoming · strength '+raid.power+' · '+timeLeft(raid.end):'Intercept a hostile faction signal to challenge an enemy raid. No raids occur until you activate this.'}</p><button data-act="raid" ${raid||Date.now()<s.raidCooldown||s.l.core<2?'disabled':''}>${raid?'Raid incoming':Date.now()<s.raidCooldown?'Signal cooldown':'Intercept signal · Core Lv 2'}</button><p>Raids repelled: ${s.raidWins}</p><button data-act="reports">Battle reports</button></div><div class="card"><h3>Military academy</h3><p>T1 Guards ${s.guards} · T2 Elites ${s.elites} · T3 Drones ${s.drones} · T4 Cyber infantry ${s.cyber} · T5 Sentinels ${s.sentinels}</p><p>${s.training?'Training: '+timeLeft(s.training.end):'Training queue idle'}</p><button data-act="advanced:cyber" ${s.l.barracks<3||s.training||!canAfford({food:150,alloy:160})?'disabled':''}>Train cyber infantry · Barracks 3 · 150 food / 160 alloy</button><button data-act="advanced:sentinels" ${s.l.hangar<4||s.training||!canAfford({energy:240,alloy:220,parts:1})?'disabled':''}>Build sentinel · Hangar 4 · 240 energy / 220 alloy / 1 part</button></div><div class="card"><h3>Neural doctrine</h3><p>${s.protocol?'Active: '+s.protocol:'Choose a permanent doctrine based on your AI alignment. Requires Lab 2 and 300 energy.'}</p><button data-act="protocol:guardian" ${s.protocol||s.moral<=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Guardian · +25 defense</button><button data-act="protocol:dominion" ${s.protocol||s.moral>=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Dominion · +20 army power</button><button data-act="protocol:observer" ${s.protocol||s.moral!==0||s.l.lab<2||s.res.energy<300?'disabled':''}>Observer · +0.3 alloy/sec</button></div><div class="card"><h3>Commander promotions</h3>${s.commanders.map(i=>`<p>${commanders[i].name} · Rank ${s.promotions[i]||0} <button data-act="promote:${i}" ${(s.cmdLv[i]||1)<3||s.inv.parts<2?'disabled':''}>Promote · 2 parts · Lv 3</button></p>`).join('')||'Recruit a commander first.'}</div></div></div>`);}
  function renderFrontier(){
@@ -1096,7 +1137,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-clou
  if(s.tutorialHidden===undefined)s.tutorialHidden=s.chapter>=4;
  applyMotionPreference();
  render();
- if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
+ if(saveBlocked)recoverySheet();else if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
  $('bootBanner')?.remove();
  setInterval(()=>{if(!document.hidden)render();},1000);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else render();});
