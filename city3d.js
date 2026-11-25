@@ -9,8 +9,9 @@ export function createCity(host, onSelect, onFailure){
  function mesh(p,g,c,x,y,z,e=0){const m=new T.Mesh(g,material(c,e));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;p.add(m);return m}
  function box(p,w,h,d,x,y,z,c,e=0){const k='b'+[w,h,d].join(',');if(!geos.has(k))geos.set(k,new T.BoxGeometry(w,h,d));return mesh(p,geos.get(k),c,x,y,z,e)}
  function cyl(p,r,h,x,y,z,c,r2=r,e=0){const k='c'+[r,h,r2].join(',');if(!geos.has(k))geos.set(k,new T.CylinderGeometry(r2,r,h,12));return mesh(p,geos.get(k),c,x,y,z,e)}
+ const terrainCanvas=document.createElement('canvas');terrainCanvas.width=terrainCanvas.height=128;const ctx=terrainCanvas.getContext('2d');ctx.fillStyle='#88877a';ctx.fillRect(0,0,128,128);let seed=731;for(let i=0;i<5000;i++){seed=(seed*1664525+1013904223)>>>0;const x=seed%128;seed=(seed*1664525+1013904223)>>>0;const y=seed%128;ctx.fillStyle=i%2?'#b0a99430':'#292f2830';ctx.fillRect(x,y,1+i%3,1+i%2)}const texture=new T.CanvasTexture(terrainCanvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(12,12);texture.colorSpace=T.SRGBColorSpace;
  const steel=0x53666b,dark=0x27383e,concrete=0x777b70,glass=0x55b6c8,gold=0xb89b58;
- box(scene,78,.7,78,0,-.5,0,0x494e3e);box(scene,46,.28,56,0,-.02,0,0x6b7268);
+ const ground=box(scene,78,.7,78,0,-.5,0,0x494e3e);ground.material.map=texture;box(scene,46,.28,56,0,-.02,0,0x6b7268);
  for(const x of [-23,23])box(scene,.8,2.4,56,x,1.2,0,dark);
  for(const z of [-28,28])for(const x of [-14,14])box(scene,18,2.4,.8,x,1.2,z,dark);
  for(const x of [-23,23])for(let z=-27;z<=27;z+=9){box(scene,1.5,3,1.5,x,1.5,z,steel);box(scene,.45,.25,.45,x,3.15,z,gold,0xffba43)}
@@ -18,6 +19,8 @@ export function createCity(host, onSelect, onFailure){
  for(const z of [-18,-6,6,18])box(scene,44,.1,2,0,.19,z,0x333e40);
  for(let z=-26;z<27;z+=3)for(const x of [-8,8])box(scene,.1,.03,1.2,x,.26,z,gold);
  for(let i=0;i<50;i++){const side=i%2?1:-1,x=side*(25+(i*7%10)),z=-35+(i*13%70);cyl(scene,.5+(i%3)*.2,.8,x,.4,z,0x62675b,.2)}
+ for(let i=0;i<18;i++){const x=(i%2?1:-1)*(27+i%5*1.6),z=-30+(i*19)%62;cyl(scene,.18,1.8,x,.9,z,0x55483b);cyl(scene,1.2,3.3,x,2.6,z,0x384f3d,.05);cyl(scene,.85,2.1,x,3.6,z,0x536749,.03)}
+ for(const x of [-21,21])for(const z of [-25,25]){box(scene,2.5,5,2.5,x,2.5,z,dark);box(scene,3,.25,3,x,5.1,z,steel);for(const dx of [-1.2,1.2])box(scene,.15,.85,2.6,x+dx,5.65,z,steel);}
  const positions=[[0,-22],[-15,-12],[15,-12],[-15,0],[15,0],[0,-10],[0,2],[-15,12],[15,12],[-15,23],[0,15],[15,23],[0,25],[0,-30]];
  const buildings=new Map(), labels=new Map(), movers=[];let active=[],lastSig='',angle=Math.PI/5,zoom=1,frame=0,disposed=false,dirty=true;
  function makeBuilding(d,i,lv){const root=new T.Group();const [x,z]=positions[i];root.position.set(x,0,z);root.userData.id=d.id;scene.add(root);box(root,8,.4,7,0,.2,0,concrete);const h=1.8+Math.min(lv,12)*.28,c=lv?new T.Color(d.color).getHex():0x4c5555;
@@ -40,6 +43,9 @@ export function createCity(host, onSelect, onFailure){
  if(lv>=3)for(let j=0;j<Math.min(4,Math.floor(lv/3));j++)box(root,.65,.7,.65,-2.6+j*1.2,.8,-2.7,steel);
  return root;}
  function rover(x,z,i){const g=new T.Group();box(g,1.1,.55,1.8,0,.52,0,i?0x809d7a:gold);box(g,.8,.45,.8,0,1,-.2,steel);for(const xx of [-.58,.58])for(const zz of [-.55,.55])box(g,.25,.5,.5,xx,.3,zz,dark);box(g,.15,.14,.12,.34,.65,.95,0xe7d7a4,0xb88e44);scene.add(g);movers.push({g,x,z,i});}rover(-8,-15,0);rover(8,4,1);
+ const patrols=[];for(let i=0;i<6;i++){const g=new T.Group();box(g,.46,.72,.32,0,.96,0,0x65795a);cyl(g,.23,.3,0,1.48,0,0x809080);const legs=[box(g,.17,.52,.18,-.13,.35,0,dark),box(g,.17,.52,.18,.13,.35,0,dark)];scene.add(g);patrols.push({g,legs,i});}
+ const aircraft=new T.Group();box(aircraft,1.3,.65,2.8,0,0,0,steel);box(aircraft,.35,.32,2.1,0,.05,-2,dark);box(aircraft,1,.35,.6,0,.05,.95,glass);const rotor=new T.Group();box(rotor,5,.07,.19,0,0,0,dark);box(rotor,.19,.07,5,0,0,0,dark);rotor.position.y=.58;aircraft.add(rotor);scene.add(aircraft);
+ let night=false;
  const overlay=document.createElement('div');overlay.className='city3labels';host.append(overlay);
  function update(data){const sig=JSON.stringify(data.map(d=>[d.id,d.lv,d.ready,d.busy]));if(sig===lastSig)return;lastSig=sig;active=data;for(const b of buildings.values())scene.remove(b);buildings.clear();overlay.replaceChildren();labels.clear();data.forEach((d,i)=>{const b=makeBuilding(d,i,d.lv);buildings.set(d.id,b);const label=document.createElement('button');label.className='city3label'+(d.ready?' ready':'')+(d.busy?' busy':'');label.textContent=d.name+' · '+(d.lv?'Lv '+d.lv:'Build')+(d.ready?' ↑':'')+(d.busy?' ⏳':'');label.addEventListener('click',()=>onSelect(d.id));overlay.append(label);labels.set(d.id,label)});dirty=true;}
  function view(){const a=Math.max(.1,host.clientWidth/Math.max(1,host.clientHeight)),h=32*Math.max(1,.8/a);camera.left=-h*a;camera.right=h*a;camera.top=h;camera.bottom=-h;camera.zoom=zoom;camera.position.set(target.x+Math.sin(angle)*65,68,target.z+Math.cos(angle)*65);camera.lookAt(target);camera.updateProjectionMatrix();dirty=true;}
@@ -53,8 +59,8 @@ export function createCity(host, onSelect, onFailure){
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(-e.deltaY*.001),.7,3.5);view()},{passive:false});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();onFailure('3D graphics context lost')});
  const vec=new T.Vector3();const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- function draw(t){if(disposed)return;frame=requestAnimationFrame(draw);if(document.hidden)return;if(!host.isConnected){dispose();return}if(!reduced){for(const {g,x,z,i} of movers){g.position.set(x,0,z+Math.sin(t*.00035+i)*8);g.rotation.y=Math.cos(t*.00035+i)>0?0:Math.PI}dirty=true}if(!dirty)return;dirty=false;renderer.render(scene,camera);for(const d of active){const b=buildings.get(d.id),el=labels.get(d.id);vec.set(b.position.x,.5,b.position.z+3.8).project(camera);el.style.left=((vec.x+1)*50)+'%';el.style.top=((1-vec.y)*50)+'%';el.hidden=Math.abs(vec.x)>1||Math.abs(vec.y)>1}}
- function dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);observer.disconnect();for(const g of geos.values())g.dispose();for(const m of mats.values())m.dispose();renderer.dispose();canvas.remove();overlay.remove()}
+ function draw(t){if(disposed)return;frame=requestAnimationFrame(draw);if(document.hidden)return;if(!host.isConnected){dispose();return}if(!reduced){for(const {g,x,z,i} of movers){g.position.set(x,0,z+Math.sin(t*.00035+i)*8);g.rotation.y=Math.cos(t*.00035+i)>0?0:Math.PI}dirty=true}if(!reduced){for(const {g,legs,i} of patrols){g.position.set(-8+i%2*16,0,-20+((t*.001+i*8)%40));legs[0].rotation.x=Math.sin(t*.008+i)*.5;legs[1].rotation.x=-legs[0].rotation.x;}aircraft.position.set(Math.cos(t*.00015)*19,12,Math.sin(t*.00015)*19);aircraft.rotation.y=-t*.00015;rotor.rotation.y=t*.035;}if(!dirty)return;dirty=false;renderer.render(scene,camera);for(const d of active){const b=buildings.get(d.id),el=labels.get(d.id);vec.set(b.position.x,.5,b.position.z+3.8).project(camera);el.style.left=((vec.x+1)*50)+'%';el.style.top=((1-vec.y)*50)+'%';el.hidden=Math.abs(vec.x)>1||Math.abs(vec.y)>1}}
+ function dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);observer.disconnect();for(const g of geos.values())g.dispose();for(const m of mats.values())m.dispose();texture.dispose();renderer.dispose();canvas.remove();overlay.remove()}
  frame=requestAnimationFrame(draw);
- return {update,dispose,zoom(d){zoom=clamp(zoom*d,.7,3.5);view()},rotate(){angle+=Math.PI/2;view()},reset(){zoom=1;target.set(0,0,0);angle=Math.PI/5;view()}};
+ return {update,dispose,toggleNight(){night=!night;sun.intensity=night?.35:3;renderer.setClearColor(night?0x0b1327:0x17252b);renderer.toneMappingExposure=night?.65:1.25;dirty=true;return night},zoom(d){zoom=clamp(zoom*d,.7,3.5);view()},rotate(){angle+=Math.PI/2;view()},reset(){zoom=1;target.set(0,0,0);angle=Math.PI/5;view()}};
 }
