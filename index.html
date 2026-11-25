@@ -103,6 +103,8 @@ body.citymode{background:#0b1012} .citymode .top{padding:calc(env(safe-area-inse
 .citymode .cityViewport{max-height:calc(100dvh - 218px - env(safe-area-inset-bottom));min-height:320px;border-color:#536b71;border-radius:0;background:#0a171f}.citymode .panel:has(.cityViewport){margin:4px 0;border-radius:0}.citymode .cityTools{background:linear-gradient(#24333d,#111d25);border-bottom:1px solid #627477}.citymode .cityCanvas .building .outline{transition:stroke .15s}.citymode .res{background:linear-gradient(#263943,#101d25);border-color:#566970}.citymode .top{background:linear-gradient(165deg,#253946,#0b1720 70%)}.tabs{background:linear-gradient(#1a2a34,#0a141b);border-top:1px solid #a98c58}.tabbtn.active{background:linear-gradient(#645533,#292b25);border-color:#d2ad67;color:#ffe3a4}.utilityRover{animation:rover17 8s ease-in-out infinite alternate}@keyframes rover17{from{transform:translateX(-12px)}to{transform:translateX(28px)}}@media(prefers-reduced-motion:reduce){.utilityRover{animation:none}}
 body[data-skin="gold"] .cityCanvas{filter:sepia(.45) saturate(1.35)}body[data-skin="ice"] .cityCanvas{filter:hue-rotate(35deg) saturate(1.3)}body[data-skin="crimson"] .cityCanvas{filter:sepia(.6) hue-rotate(315deg) saturate(1.7)}body[data-skin="gold"] .top{border-bottom:2px solid #d6ad54}body[data-skin="ice"] .top{border-bottom:2px solid #80d8ff}body[data-skin="crimson"] .top{border-bottom:2px solid #d05c5c}
 @keyframes recruitArrival{from{opacity:0;transform:scale(.84) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}.recruitPortrait{animation:recruitArrival .65s ease-out both}.recruitPortrait svg{width:100%;height:auto}@media(prefers-reduced-motion:reduce){.recruitPortrait{animation:none}}
+
+.tabsInner{grid-template-columns:repeat(6,minmax(0,1fr))}.tabbtn{position:relative;min-width:0}.eventBadge{position:absolute;right:2px;top:2px;background:#b54f43;color:#fff;border-radius:999px;font-size:10px;min-width:16px;padding:2px;text-align:center}.lowMotion *, .lowMotion *::before,.lowMotion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}@media(max-width:420px){.tabsInner .tabbtn{font-size:10px;padding-left:2px;padding-right:2px}}
 </style>
 <style>.combatScene{position:relative;overflow:hidden;height:260px;border:1px solid #8a7951;border-radius:12px;background:linear-gradient(#142537,#594d40 58%,#26292b 59%,#101719);isolation:isolate}.combatScene svg{width:100%;height:100%;display:block}.combatScene .friendly{animation:advance 3s ease-in-out both}.combatScene .hostile{animation:advanceEnemy 3s ease-in-out both}.combatScene .bolt{stroke-dasharray:16 180;animation:fire 0.65s linear 5;opacity:.9}.combatScene .burst{animation:burst .7s ease-out 4;transform-box:fill-box;transform-origin:center}.combatScene .result{animation:reveal .5s 3s both}.combatScene .smoke{animation:smoke 3s ease-out both}@keyframes advance{from{transform:translateX(-65px)}to{transform:translateX(25px)}}@keyframes advanceEnemy{from{transform:translateX(65px)}to{transform:translateX(-25px)}}@keyframes fire{from{stroke-dashoffset:180}to{stroke-dashoffset:0}}@keyframes burst{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.4)}}@keyframes reveal{from{opacity:0}to{opacity:1}}@keyframes smoke{from{opacity:.2;transform:translateY(15px)}to{opacity:.6;transform:translateY(-15px)}}@media(prefers-reduced-motion:reduce){.combatScene *{animation:none!important}}</style><style>
 .cityCanvas .life-layer{pointer-events:none}.cityCanvas .life-patrol{animation:lifePatrol 9s ease-in-out infinite alternate}.cityCanvas .life-cargo{animation:lifeCargo 13s ease-in-out infinite alternate}.cityCanvas .life-smoke{animation:lifeSmoke 4s ease-out infinite;transform-box:fill-box;transform-origin:center}.cityCanvas .life-beacon{animation:lifeBeacon 1.6s ease-in-out infinite alternate}.cityCanvas .life-leg{animation:lifeStep .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}.cityCanvas .life-leg.other{animation-direction:alternate-reverse}.cityCanvas .life-scan{animation:lifeScan 5s ease-in-out infinite alternate;transform-origin:0 0}.cityCanvas .life-worker{animation:lifePatrol 7s ease-in-out infinite alternate}.cityCanvas .life-spark{animation:lifeBeacon .65s infinite alternate}.cityCanvas .life-spark:nth-child(2){animation-delay:-.4s}
@@ -151,7 +153,7 @@ button:focus-visible{outline:2px solid #f2d08b;outline-offset:2px}
       </div>
       <div class="center">
         <div class="small">Power</div>
-        <div class="big" id="power">0</div><button type="button" data-prologue="0" style="font-size:11px;padding:5px 8px">Story</button><button id="audioToggle" type="button" aria-label="Toggle game audio" aria-pressed="false" style="font-size:11px;padding:5px 8px;margin-top:4px;min-width:56px">♪ Off</button>
+        <div class="big" id="power">0</div><button type="button" data-polish="settings" aria-label="Settings" style="font-size:11px;padding:5px 8px">⚙</button><button type="button" data-prologue="0" style="font-size:11px;padding:5px 8px">Story</button><button id="audioToggle" type="button" aria-label="Toggle game audio" aria-pressed="false" style="font-size:11px;padding:5px 8px;margin-top:4px;min-width:56px">♪ Off</button>
       </div>
     </div>
     <div class="chips">
@@ -343,6 +345,38 @@ document.addEventListener('click',e=>{
  }else if(b.hasAttribute('data-achievement')){const a=achievementDefs().find(t=>t[0]===b.dataset.achievement);if(!a||!a[2]||(s.achievementClaims||[]).includes(a[0]))return;(s.achievementClaims??=[]).push(a[0]);reward(a[3]);s.message='Achievement earned: '+a[1];}
  else{const v=s.weeklyExpeditionEvent;if(!v||v.week!==eventWeek()||v.count<3||v.claimed)return;v.claimed=true;reward({alloy:300,diamond:25});s.message='Weekly Frontier Survey complete.';}
  save();render();
+});
+
+
+function rewardInbox(){
+ const out=[],today=dayKey(),w=eventWeek();
+ if(s.loginDay!==today)out.push({name:'Daily supply drop',claim:()=>{reward(loginReward());s.loginStreak=s.loginDay===dayKey(-1)?s.loginStreak+1:1;s.loginDay=today;vipGain(35);}});
+ const n=Math.max(0,Math.min(7,Math.floor(Number(s.welcomeDays)||0)));
+ const gifts=[{alloy:200},{food:300,water:300},{manuals:2},{energy:400},{parts:3},{speed1:3},{diamond:75,manuals:3}];
+ if(n<7&&s.welcomeLast!==today)out.push({name:'Welcome package '+(n+1),claim:()=>{reward(gifts[n]);s.welcomeDays=n+1;s.welcomeLast=today;}});
+ const x=s.commanderExpedition,t=x&&expeditionTypes[x.type];
+ if(t&&Date.now()>=x.end)out.push({name:'Completed expedition',claim:()=>{reward(t.loot);s.commanderExpedition=null;s.expeditionsCompleted=(s.expeditionsCompleted||0)+1;if(s.weeklyExpeditionEvent?.week!==w)s.weeklyExpeditionEvent={week:w,count:0,claimed:false};s.weeklyExpeditionEvent.count++;}});
+ const v=s.weeklyExpeditionEvent;
+ if(v?.week===w&&v.count>=3&&!v.claimed)out.push({name:'Weekly Frontier Survey',claim:()=>{v.claimed=true;reward({alloy:300,diamond:25});}});
+ for(const a of achievementDefs())if(a[2]&&!(s.achievementClaims||[]).includes(a[0]))out.push({name:a[1],claim:()=>{(s.achievementClaims??=[]).push(a[0]);reward(a[3]);}});
+ return out;
+}
+function renderEventHub(){
+ const ready=rewardInbox();
+ $('view').innerHTML='<div class="panel"><div class="head"><b>EVENT COMMAND</b><span class="pill">'+ready.length+' rewards ready</span></div><div class="body list"><div class="card"><h3>Reward inbox</h3><p>'+(ready.length?ready.map(x=>safeBattleText(x.name)).join(' · '):'All caught up. Check back after your next mission.')+'</p><button data-polish="collect" '+(ready.length?'':'disabled')+'>Collect all available rewards</button><p class="small">Includes local login, welcome, expedition, weekly and achievement rewards. Campaign, chapter and online rewards remain separate.</p></div>'+eventCenterPanel()+dailyBossPanel()+expeditionPanel()+welcomeTrack()+achievementPanel()+'<button data-act="tab:Missions">Campaign and missions →</button></div></div>';
+}
+function applyMotionPreference(){document.body.classList.toggle('lowMotion',!!s.lowMotion);}
+function settingsSheet(){
+ openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-polish]');if(!b||b.disabled)return;
+ const a=b.dataset.polish;
+ if(a==='settings')settingsSheet();
+ if(a==='motion'){s.lowMotion=!s.lowMotion;applyMotionPreference();save();settingsSheet();}
+ if(a==='audio')$('audioToggle')?.click();
+ if(a==='voice'&&'speechSynthesis' in window)window.speechSynthesis.cancel();
+ if(a==='collect'){let count=0;for(let pass=0;pass<3;pass++){const ready=rewardInbox();if(!ready.length)break;for(const item of ready){item.claim();count++;}}s.message=count+' rewards collected.';save();render();}
 });
 
 function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list">${welcomeTrack()}${careerPanel()}${operationPanel()}${factionPanel()}${specialistPanel()}${dailyBossPanel()}${eventCenterPanel()}${expeditionPanel()}${achievementPanel()}<div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
@@ -729,12 +763,12 @@ document.addEventListener('click',e=>{
  }
  function render(){
    const scrolls=[...document.querySelectorAll(".hqWrap,.worldscroll,.heroStrip")].map(e=>[e.className,e.scrollLeft]); tick(); renderTop();
-   $('tabs').innerHTML=['HQ','World','Inventory','Alliance','PvP'].map(t=>{const active=tab===t||(t==='HQ'&&['Commanders','Legacy','Missions','AI'].includes(tab))||(t==='World'&&['Surface','Frontier','Shared'].includes(tab))||(t==='Inventory'&&tab==='Legendary');return `<button class="tabbtn ${active?'active':''}" ${active?'aria-current="page"':''} data-act="tab:${t}"><span class="navGlyph">${({HQ:'⌂',World:'◎',Inventory:'▣',Alliance:'♜',PvP:'⚔'})[t]}</span>${t==='HQ'?'Base':t}</button>`}).join('');
+   $('tabs').innerHTML=['HQ','World','Events','Inventory','Alliance','PvP'].map(t=>{const active=tab===t||(t==='HQ'&&['Commanders','Legacy','Missions','AI'].includes(tab))||(t==='World'&&['Surface','Frontier','Shared'].includes(tab))||(t==='Inventory'&&tab==='Legendary');return `<button class="tabbtn ${active?'active':''}" ${active?'aria-current="page"':''} data-act="tab:${t}"><span class="navGlyph">${({HQ:'⌂',World:'◎',Inventory:'▣',Alliance:'♜',PvP:'⚔',Events:'★'})[t]}</span>${t==='HQ'?'Base':t}${t==='Events'&&rewardInbox().length?`<span class="eventBadge">${rewardInbox().length}</span>`:''}</button>`}).join('');
    document.body.classList.toggle('citymode',tab==='HQ');document.body.classList.toggle('worldmode',tab==='World'); if(tab==='HQ') renderHQ();
    if(tab==='World'){renderWorld();renderGather();$('view').insertAdjacentHTML('beforeend','<div class="panel"><div class="body row"><button data-act="tab:Shared">🌐 Genesis · Shared world</button><button data-act="tab:Surface">Surface districts &amp; Exchange</button><button data-act="tab:Frontier">Frontier operations</button></div></div>');}
    if(tab==='Commanders') renderCommanders();
    if(tab==='Legacy') renderLegacy();
-   if(tab==='Missions'){renderMissions();renderEmpire();}
+   if(tab==='Missions'){renderMissions();renderEmpire();} if(tab==='Events')renderEventHub();
    if(tab==='Inventory'){renderInventory();$('view').insertAdjacentHTML('afterbegin','<div class="panel"><div class="body"><button data-act="tab:Legendary">♜ Legendary Dominion</button> <button data-act="cloud">☁ Connected Worlds</button></div></div>');} if(tab==='Legendary') $('view').innerHTML=legendaryPanel(); document.body.dataset.skin=s.skin;
    if(tab==='Shared') renderSharedWorld(); if(tab==='Surface') renderSurface(); if(tab==='Frontier') renderFrontier(); if(tab==='AI') renderAI(); if(tab==='AI') renderWarPanel(); if(tab==='Alliance')renderOnlineAlliance(); if(tab==='PvP'){$('view').innerHTML='<div class="panel"><div class="head"><b>WAR THEATER</b><span class="pill">Training / PvE</span></div><div class="body"><p>Practice combat against hostile factions. Online troop combat beta is accessible in Genesis. Supply loot and hospital recovery are enabled; rankings are pending.</p><button data-act="tab:Shared">Genesis online march beta</button><button data-act="tab:World">Open solo battle map</button></div></div>';renderWarPanel();}
    scrolls.forEach(([c,x])=>{const el=document.querySelector('.'+c);if(el)el.scrollLeft=x;});
@@ -971,6 +1005,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-clou
 
  document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('g[data-act]')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
  $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeSheet(); });
+ applyMotionPreference();
  render();
  if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
  setInterval(render,1000);
