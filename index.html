@@ -114,6 +114,8 @@ body[data-skin="gold"] .cityCanvas{filter:sepia(.45) saturate(1.35)}body[data-sk
 @media(prefers-reduced-motion:reduce){.feedbackPop,.tacticalFloat,.tacticalHit,.tacticalVictory,.tacticalCall,.constructionActive #cityQueue,.constructionActive #city3queue{animation:none!important}.tacticalBar{transition:none!important}}
 
 .profileBadge{display:block;font-size:11px;padding:3px 8px;margin:4px 0;color:#e7cf92;border-color:#796747;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profileHero{padding:24px 16px;text-align:center;border:1px solid #716344;border-radius:14px;background:radial-gradient(ellipse at top,#43504a,#141e25 75%)}.profileHero h2{color:#e7cf92;overflow-wrap:anywhere}.bootBanner{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:12px;background:#162125;color:#e6d09b;letter-spacing:2px}.bootBanner span{font-size:11px;letter-spacing:1px}
+
+.tutorialGuide{margin:10px;padding:12px;border:1px solid #80734e;background:linear-gradient(145deg,#23332d,#151e22);border-radius:14px}.tutorialGuide[hidden]{display:none}.tutorialGuide h3{margin:8px 0 4px;color:#e2cb8d}.tutorialGuide p{margin:6px 0 10px;font-size:13px}.guideHeader{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;color:#ddc58c;font-size:12px}.tutorialGuide button{font-size:12px;padding:8px 10px;margin:2px 0}.guideSteps{margin-top:12px}
 </style>
 <style>.combatScene{position:relative;overflow:hidden;height:260px;border:1px solid #8a7951;border-radius:12px;background:linear-gradient(#142537,#594d40 58%,#26292b 59%,#101719);isolation:isolate}.combatScene svg{width:100%;height:100%;display:block}.combatScene .friendly{animation:advance 3s ease-in-out both}.combatScene .hostile{animation:advanceEnemy 3s ease-in-out both}.combatScene .bolt{stroke-dasharray:16 180;animation:fire 0.65s linear 5;opacity:.9}.combatScene .burst{animation:burst .7s ease-out 4;transform-box:fill-box;transform-origin:center}.combatScene .result{animation:reveal .5s 3s both}.combatScene .smoke{animation:smoke 3s ease-out both}@keyframes advance{from{transform:translateX(-65px)}to{transform:translateX(25px)}}@keyframes advanceEnemy{from{transform:translateX(65px)}to{transform:translateX(-25px)}}@keyframes fire{from{stroke-dashoffset:180}to{stroke-dashoffset:0}}@keyframes burst{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.4)}}@keyframes reveal{from{opacity:0}to{opacity:1}}@keyframes smoke{from{opacity:.2;transform:translateY(15px)}to{opacity:.6;transform:translateY(-15px)}}@media(prefers-reduced-motion:reduce){.combatScene *{animation:none!important}}</style><style>
 .cityCanvas .life-layer{pointer-events:none}.cityCanvas .life-patrol{animation:lifePatrol 9s ease-in-out infinite alternate}.cityCanvas .life-cargo{animation:lifeCargo 13s ease-in-out infinite alternate}.cityCanvas .life-smoke{animation:lifeSmoke 4s ease-out infinite;transform-box:fill-box;transform-origin:center}.cityCanvas .life-beacon{animation:lifeBeacon 1.6s ease-in-out infinite alternate}.cityCanvas .life-leg{animation:lifeStep .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}.cityCanvas .life-leg.other{animation-direction:alternate-reverse}.cityCanvas .life-scan{animation:lifeScan 5s ease-in-out infinite alternate;transform-origin:0 0}.cityCanvas .life-worker{animation:lifePatrol 7s ease-in-out infinite alternate}.cityCanvas .life-spark{animation:lifeBeacon .65s infinite alternate}.cityCanvas .life-spark:nth-child(2){animation-delay:-.4s}
@@ -175,7 +177,7 @@ button:focus-visible{outline:2px solid #f2d08b;outline-offset:2px}
     <div class="resbar" id="resources"></div>
   </div>
 
-  <div class="mission" id="chapterBox"></div>
+  <div class="mission" id="chapterBox"></div><section id="tutorialGuide" class="tutorialGuide" aria-label="Beginner guide" hidden></section>
   <div class="notice" id="notice"></div>
   <div class="heroStrip" id="heroStrip"></div>
   <div id="view"></div>
@@ -388,8 +390,40 @@ document.addEventListener('click',e=>{
  if(b.dataset.profile==='save'){const v=String($('profileCallsign')?.value||'').trim();if(!/^[A-Za-z0-9 _-]{3,24}$/.test(v)){gameFeedback('Use 3–24 letters, numbers, spaces, _ or -');return;}s.playerCallsign=v;save();render();playerProfileSheet();gameFeedback('Commander profile saved');}
 });
 
+
+function tutorialSteps(){return [
+ {name:'Open the blast door',hint:'Survivors are requesting entry. Your choice shapes EVA’s personality.',done:!!s.flags.knock,act:'event:knock',label:'Answer the knock'},
+ {name:'Restore the AI Core',hint:'Upgrade the Core to level 2. Wait for construction to finish, and collect chapter rewards for additional supplies.',done:s.l.core>=2,act:'open:core',label:'Open AI Core'},
+ {name:'Establish the Barracks',hint:'Construct the Barracks to unlock troop training.',done:s.l.barracks>=1,act:'open:barracks',label:'Open Barracks'},
+ {name:'Train your first squad',hint:'Train at least four guards. Training and construction use separate systems.',done:s.guards>=4,act:'open:barracks',label:'Train guards'},
+ {name:'Recruit a commander',hint:'Choose a specialist in the Command Center and spend alloy to recruit them.',done:s.commanders.length>=1,act:'tab:Commanders',label:'Meet commanders'},
+ {name:'Master tactical combat',hint:'Practice counters and EVA Overdrive without risking troops. Assault counters Flank, Fortify counters Assault, and Flank counters Fortify.',done:!!s.academyCertified,act:'tutorial:academy',label:'Enter combat academy'},
+ {name:'Explore the wasteland',hint:'Inspect the Supply Depot, choose a commander and formation, and deploy sufficient power to capture it.',done:s.territory.includes(0),act:'inspect:0',label:'Inspect Supply Depot'},
+ {name:'Collect your welcome supplies',hint:'Open Events and claim your welcome package or use the reward inbox.',done:(s.welcomeDays||0)>=1,act:'tab:Events',label:'Open Events'}
+];}
+function tutorialMarkup(full=false){
+ const steps=tutorialSteps(),n=steps.filter(x=>x.done).length,next=steps.find(x=>!x.done);
+ const summary='<div class="guideHeader"><small>EVA · COMMAND TRAINING</small><b>'+n+'/'+steps.length+' objectives</b></div><div class="progress"><i style="width:'+n/steps.length*100+'%"></i></div>';
+ const action=next?'<h3>'+next.name+'</h3><p>'+next.hint+'</p><button data-act="'+next.act+'">'+next.label+'</button>':s.tutorialRewardClaimed?'<h3>Training complete</h3><p>Welcome to the frontier, Commander.</p>':'<h3>Training complete</h3><button data-guide="claim">Claim graduation · 150 alloy, 2 manuals</button>';
+ return summary+action+(full?'<div class="guideSteps">'+steps.map((x,i)=>'<div class="skillline"><b>'+(x.done?'✓ ':'○ ')+(i+1)+'. '+x.name+'</b><p>'+x.hint+'</p>'+(!x.done?'<button data-act="'+x.act+'">'+x.label+'</button>':'')+'</div>').join('')+'</div>':' <button data-guide="open">Training guide</button>')+' <button data-guide="hide">'+(next?'Hide guide':'Dismiss guide')+'</button>';
+}
+function renderTutorial(){
+ const host=$('tutorialGuide');if(!host)return;
+ host.hidden=!!s.tutorialHidden||!!s.tutorialRewardClaimed;
+ if(!host.hidden)stableHTML(host,tutorialMarkup());
+}
+function tutorialSheet(){openSheet('<button class="close" data-act="close">Close ✕</button>'+tutorialMarkup(true));}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-guide]');if(!b||b.disabled)return;
+ const a=b.dataset.guide;
+ if(a==='open'){tutorialSheet();return;}
+ if(a==='hide'){s.tutorialHidden=true;save();closeSheet();render();}
+ if(a==='show'){s.tutorialHidden=false;save();closeSheet();render();tutorialSheet();}
+ if(a==='claim'&&!s.tutorialRewardClaimed&&tutorialSteps().every(x=>x.done)){s.tutorialRewardClaimed=true;reward({alloy:150,manuals:2});s.message='EVA: Command training complete.';save();closeSheet();render();}
+});
+
 function settingsSheet(){
- openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-profile="open">Player profile</button> <button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
+ openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-guide="show">Show beginner guide</button> <button data-profile="open">Player profile</button> <button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-polish]');if(!b||b.disabled)return;
@@ -586,6 +620,7 @@ function safeName(v){return String(v).replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().
  }
  function nextChapter(){ return chapters[s.chapter] || null; }
  function renderTop(){
+   renderTutorial();
    const p=$('profileBadge');if(p)p.textContent=s.playerCallsign||'Commander';
    $('power').textContent=fmt(totalPower());
    $('commanderLevel').textContent=s.commanderLevel;
@@ -934,6 +969,7 @@ function resolveMarchOld(){
    }
    if(act==='inspect'){inspectSite(Number(parts[1]));}
    if(act==='reports'){reportSheet();}
+   if(act==='tutorial'&&parts[1]==='academy'){tacticalDrill(0);}
    if(act==='replay'){battleReplay(Number(parts[1]));}
    if(act==='scout'){const i=Number(parts[1]);if(!s.scouted.includes(i)&&spend({energy:10})){s.scouted.push(i);s.message='Recon complete.';}inspectSite(i);}
    if(act==='elite'){if(s.l.barracks>=2&&!s.training&&spend({food:80,alloy:80})){s.training={unit:'elites',count:2,end:Date.now()+25000};s.message='Elite training initiated.';closeSheet();}}
@@ -1057,6 +1093,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-clou
 
  document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('g[data-act]')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
  $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeSheet(); });
+ if(s.tutorialHidden===undefined)s.tutorialHidden=s.chapter>=4;
  applyMotionPreference();
  render();
  if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
