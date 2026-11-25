@@ -105,6 +105,13 @@ body[data-skin="gold"] .cityCanvas{filter:sepia(.45) saturate(1.35)}body[data-sk
 @keyframes recruitArrival{from{opacity:0;transform:scale(.84) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}.recruitPortrait{animation:recruitArrival .65s ease-out both}.recruitPortrait svg{width:100%;height:auto}@media(prefers-reduced-motion:reduce){.recruitPortrait{animation:none}}
 
 .tabsInner{grid-template-columns:repeat(6,minmax(0,1fr))}.tabbtn{position:relative;min-width:0}.eventBadge{position:absolute;right:2px;top:2px;background:#b54f43;color:#fff;border-radius:999px;font-size:10px;min-width:16px;padding:2px;text-align:center}.lowMotion *, .lowMotion *::before,.lowMotion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}@media(max-width:420px){.tabsInner .tabbtn{font-size:10px;padding-left:2px;padding-right:2px}}
+
+.gameFeedback{position:fixed;z-index:150;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:90vw;width:max-content;text-align:center;padding:10px 16px;background:#233b31;color:#e8eecf;border:1px solid #a1b67c;border-radius:12px;box-shadow:0 8px 24px #0009;pointer-events:none;font-size:13px;font-weight:700}
+.feedbackPop{animation:feedbackRise .3s ease-out both}@keyframes feedbackRise{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+#sheet .combatScene{position:relative;overflow:hidden}.tacticalBar{transition:width .45s ease-out}.tacticalFloat{position:absolute;top:28%;font-size:24px;font-weight:900;text-shadow:0 2px 5px #000;pointer-events:none;animation:damageRise 1s ease-out both}.friendlyDamage{left:20%;color:#f8a595}.enemyDamage{right:20%;color:#ffe0a0}.tacticalCall{position:absolute;top:3px;left:50%;transform:translateX(-50%);color:#f4d17d;background:#152321;padding:3px 7px;border-radius:6px;font-size:10px;white-space:nowrap;animation:feedbackRise .3s ease-out}.tacticalHit{animation:hitFlash .3s ease-out}.tacticalVictory{outline:2px solid #afcf84;animation:victoryGlow .8s ease-out}.tacticalDefeat{outline:2px solid #b15d59}
+@keyframes damageRise{0%{opacity:1;transform:translateY(5px)}75%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}@keyframes hitFlash{0%{box-shadow:inset 0 0 24px #e6bb7666}100%{box-shadow:none}}@keyframes victoryGlow{0%{box-shadow:inset 0 0 48px #b5dc7b99}100%{box-shadow:none}}
+.constructionActive #cityQueue,.constructionActive #city3queue{color:#f3ce7e;text-shadow:0 0 8px #d7af66;animation:buildPulse 1.4s ease-in-out infinite alternate}@keyframes buildPulse{from{opacity:.65}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.feedbackPop,.tacticalFloat,.tacticalHit,.tacticalVictory,.tacticalCall,.constructionActive #cityQueue,.constructionActive #city3queue{animation:none!important}.tacticalBar{transition:none!important}}
 </style>
 <style>.combatScene{position:relative;overflow:hidden;height:260px;border:1px solid #8a7951;border-radius:12px;background:linear-gradient(#142537,#594d40 58%,#26292b 59%,#101719);isolation:isolate}.combatScene svg{width:100%;height:100%;display:block}.combatScene .friendly{animation:advance 3s ease-in-out both}.combatScene .hostile{animation:advanceEnemy 3s ease-in-out both}.combatScene .bolt{stroke-dasharray:16 180;animation:fire 0.65s linear 5;opacity:.9}.combatScene .burst{animation:burst .7s ease-out 4;transform-box:fill-box;transform-origin:center}.combatScene .result{animation:reveal .5s 3s both}.combatScene .smoke{animation:smoke 3s ease-out both}@keyframes advance{from{transform:translateX(-65px)}to{transform:translateX(25px)}}@keyframes advanceEnemy{from{transform:translateX(65px)}to{transform:translateX(-25px)}}@keyframes fire{from{stroke-dashoffset:180}to{stroke-dashoffset:0}}@keyframes burst{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.4)}}@keyframes reveal{from{opacity:0}to{opacity:1}}@keyframes smoke{from{opacity:.2;transform:translateY(15px)}to{opacity:.6;transform:translateY(-15px)}}@media(prefers-reduced-motion:reduce){.combatScene *{animation:none!important}}</style><style>
 .cityCanvas .life-layer{pointer-events:none}.cityCanvas .life-patrol{animation:lifePatrol 9s ease-in-out infinite alternate}.cityCanvas .life-cargo{animation:lifeCargo 13s ease-in-out infinite alternate}.cityCanvas .life-smoke{animation:lifeSmoke 4s ease-out infinite;transform-box:fill-box;transform-origin:center}.cityCanvas .life-beacon{animation:lifeBeacon 1.6s ease-in-out infinite alternate}.cityCanvas .life-leg{animation:lifeStep .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}.cityCanvas .life-leg.other{animation-direction:alternate-reverse}.cityCanvas .life-scan{animation:lifeScan 5s ease-in-out infinite alternate;transform-origin:0 0}.cityCanvas .life-worker{animation:lifePatrol 7s ease-in-out infinite alternate}.cityCanvas .life-spark{animation:lifeBeacon .65s infinite alternate}.cityCanvas .life-spark:nth-child(2){animation-delay:-.4s}
@@ -473,7 +480,33 @@ function tick(){
 }
 function canAfford(costObj){ return Object.entries(costObj).every(([k,v])=> (k in s.res ? s.res[k] : s.inv[k]||0) >= v); }
 function spend(costObj){ if(!canAfford(costObj)) return false; for(const [k,v] of Object.entries(costObj)){ if(k in s.res) s.res[k]-=v; else s.inv[k]-=v; } return true; }
-function reward(obj){ for(const [k,v] of Object.entries(obj)){ if(k in s.res) s.res[k]=(s.res[k]||0)+v; else s.inv[k]=(s.inv[k]||0)+v; } }
+
+let feedbackTimer=null,feedbackTotals={};
+function gameFeedback(message){
+ if(document.hidden)return;
+ let el=document.getElementById('gameFeedback');
+ if(!el){el=document.createElement('div');el.id='gameFeedback';el.className='gameFeedback';el.setAttribute('role','status');document.body.appendChild(el);}
+ el.textContent=message;el.classList.remove('feedbackPop');void el.offsetWidth;el.classList.add('feedbackPop');clearTimeout(feedbackTimer);feedbackTimer=setTimeout(()=>el.remove(),2400);
+}
+let rewardFeedbackTimer=null;
+function queueRewardFeedback(obj){
+ if(document.hidden)return;
+ for(const [k,v] of Object.entries(obj))if(Number.isFinite(v)&&v>0)feedbackTotals[k]=(feedbackTotals[k]||0)+v;
+ if(rewardFeedbackTimer!==null)return;
+ rewardFeedbackTimer=setTimeout(()=>{rewardFeedbackTimer=null;const items=Object.entries(feedbackTotals);feedbackTotals={};if(items.length&&!document.hidden)gameFeedback(items.map(([k,v])=>'+'+fmt(v)+' '+k).join(' · '));},100);
+}
+function animateDrillHit(oldHp,oldEnemy,action,correct){
+ const d=drill,scene=document.querySelector('#sheet .combatScene');if(!d||!scene)return;
+ const bars=scene.querySelectorAll('.progress>i');
+ const previous=[oldHp,oldEnemy/(d.maxEnemy||100)*100],next=[d.hp,d.enemy/(d.maxEnemy||100)*100];
+ bars.forEach((bar,i)=>{if(i>1)return;bar.style.width=previous[i]+'%';void bar.offsetWidth;bar.classList.add('tacticalBar');bar.style.width=next[i]+'%';});
+ const labels=[oldHp-d.hp,oldEnemy-d.enemy];
+ labels.forEach((n,i)=>{if(!n&&i===1)return;const el=document.createElement('span');el.className='tacticalFloat '+(i===0?'friendlyDamage':'enemyDamage');el.textContent=n?'−'+n:'BLOCKED';scene.appendChild(el);setTimeout(()=>el.remove(),1000);});
+ if(correct||action==='ability'){const el=document.createElement('div');el.className='tacticalCall';el.textContent=action==='ability'?'OVERDRIVE':'COUNTER SUCCESS';scene.appendChild(el);setTimeout(()=>el.remove(),1000);}
+ scene.classList.add(d.done?(d.enemy===0?'tacticalVictory':'tacticalDefeat'):'tacticalHit');
+}
+
+function reward(obj){ for(const [k,v] of Object.entries(obj)){ if(k in s.res) s.res[k]=(s.res[k]||0)+v; else s.inv[k]=(s.inv[k]||0)+v; } queueRewardFeedback(obj); }
 function timeLeft(ts){ const s=Math.max(0,Math.ceil((ts-Date.now())/1000)); const m=Math.floor(s/60), ss=s%60, h=Math.floor(m/60), mm=m%60; return h?`${h}h ${mm}m`:(m?`${m}m ${ss}s`:`${ss}s`); }
 function openSheet(html){ $('sheet').innerHTML=html; $('modal').classList.add('show'); }
 function closeSheet(){ $('modal').classList.remove('show'); }
@@ -658,12 +691,14 @@ document.addEventListener('click',e=>{
  const heroId={vanguard:4,pathfinder:5,innovator:6}[a];const bonus=heroId!==undefined&&(d.crisis||Number.isInteger(d.operation))&&s.commanders.includes(heroId)?2*Math.max(0,Math.min(5,s.skills[heroId]||0))+(setCount(heroId,heroId-4)===2?4:0):0;
  const hit=(a==='vanguard'?18:a==='pathfinder'?40:a==='innovator'?15:a==='ability'?45:correct?27:12)+bonus;
  const loss=a==='vanguard'?0:a==='pathfinder'?12:a==='innovator'?10:a==='ability'?9:correct?8:23;
+ const oldHp=d.hp,oldEnemy=d.enemy;
  d.enemy=Math.max(0,d.enemy-hit);d.hp=Math.max(0,d.hp-(d.enemy===0?0:loss));
  d.charge=a==='innovator'?2:a==='ability'?0:Math.min(2,d.charge+(correct?1:0));
  d.round++;d.done=d.enemy===0||d.hp===0;
  d.log=a==='vanguard'?'Dustin Jr. deployed Aegis. Retaliation blocked.':a==='pathfinder'?'Logan broke through the enemy line.':a==='innovator'?'Damien restored EVA to full charge.':a==='ability'?'EVA Overdrive activated.':correct?'Counter successful. Enemy formation disrupted.':'Enemy countered your order. Adapt your strategy.';
  if(d.done&&d.enemy===0&&d.crisis){if(s.dailyTacticalBoss!==dayKey()){reward(crisisOp.loot);s.dailyTacticalBoss=dayKey();s.message='Rift Sentinel defeated.';save();d.log+=' Daily crisis rewards received.';}}else if(d.done&&d.enemy===0&&Number.isInteger(d.operation)&&d.operation===operationProgress()){reward(operations[d.operation].loot);s.operationProgress=d.operation+1;s.message='Operation secured: '+operations[d.operation].name;save();d.log+=' First-clear rewards received.';}else if(d.done&&d.enemy===0&&!Number.isInteger(d.operation)&&!s.academyCertified){s.academyCertified=true;save();d.log+=' Academy certification earned.';}
  drawDrill();
+ animateDrillHit(oldHp,oldEnemy,a,correct);
 });
 
 
@@ -762,7 +797,7 @@ document.addEventListener('click',e=>{
    return 'Keep pushing chapters, collect dailies, and expand into more sectors.';
  }
  function render(){
-   const scrolls=[...document.querySelectorAll(".hqWrap,.worldscroll,.heroStrip")].map(e=>[e.className,e.scrollLeft]); tick(); renderTop();
+   const scrolls=[...document.querySelectorAll(".hqWrap,.worldscroll,.heroStrip")].map(e=>[e.className,e.scrollLeft]); const pendingBuild=s.queue?{id:s.queue.id,level:s.l[s.queue.id]||0}:null; tick(); renderTop(); if(pendingBuild&&!s.queue&&(s.l[pendingBuild.id]||0)>pendingBuild.level)gameFeedback((defs.find(d=>d.id===pendingBuild.id)?.name||'Building')+' upgraded · Lv '+s.l[pendingBuild.id]); document.body.classList.toggle('constructionActive',!!s.queue);
    $('tabs').innerHTML=['HQ','World','Events','Inventory','Alliance','PvP'].map(t=>{const active=tab===t||(t==='HQ'&&['Commanders','Legacy','Missions','AI'].includes(tab))||(t==='World'&&['Surface','Frontier','Shared'].includes(tab))||(t==='Inventory'&&tab==='Legendary');return `<button class="tabbtn ${active?'active':''}" ${active?'aria-current="page"':''} data-act="tab:${t}"><span class="navGlyph">${({HQ:'⌂',World:'◎',Inventory:'▣',Alliance:'♜',PvP:'⚔',Events:'★'})[t]}</span>${t==='HQ'?'Base':t}${t==='Events'&&rewardInbox().length?`<span class="eventBadge">${rewardInbox().length}</span>`:''}</button>`}).join('');
    document.body.classList.toggle('citymode',tab==='HQ');document.body.classList.toggle('worldmode',tab==='World'); if(tab==='HQ') renderHQ();
    if(tab==='World'){renderWorld();renderGather();$('view').insertAdjacentHTML('beforeend','<div class="panel"><div class="body row"><button data-act="tab:Shared">🌐 Genesis · Shared world</button><button data-act="tab:Surface">Surface districts &amp; Exchange</button><button data-act="tab:Frontier">Frontier operations</button></div></div>');}
