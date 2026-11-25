@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
-<title>Afterlight: Dominion V5.0</title>
+<title>Afterlight: Dominion V5.3</title>
 <style>
 :root{
   --bg:#0c1214; --panel:#162024; --panel2:#1a252b; --line:#314148; --text:#e8eee8; --muted:#93a7a0;
@@ -112,6 +112,8 @@ body[data-skin="gold"] .cityCanvas{filter:sepia(.45) saturate(1.35)}body[data-sk
 @keyframes damageRise{0%{opacity:1;transform:translateY(5px)}75%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}@keyframes hitFlash{0%{box-shadow:inset 0 0 24px #e6bb7666}100%{box-shadow:none}}@keyframes victoryGlow{0%{box-shadow:inset 0 0 48px #b5dc7b99}100%{box-shadow:none}}
 .constructionActive #cityQueue,.constructionActive #city3queue{color:#f3ce7e;text-shadow:0 0 8px #d7af66;animation:buildPulse 1.4s ease-in-out infinite alternate}@keyframes buildPulse{from{opacity:.65}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.feedbackPop,.tacticalFloat,.tacticalHit,.tacticalVictory,.tacticalCall,.constructionActive #cityQueue,.constructionActive #city3queue{animation:none!important}.tacticalBar{transition:none!important}}
+
+.profileBadge{display:block;font-size:11px;padding:3px 8px;margin:4px 0;color:#e7cf92;border-color:#796747;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profileHero{padding:24px 16px;text-align:center;border:1px solid #716344;border-radius:14px;background:radial-gradient(ellipse at top,#43504a,#141e25 75%)}.profileHero h2{color:#e7cf92;overflow-wrap:anywhere}.bootBanner{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:12px;background:#162125;color:#e6d09b;letter-spacing:2px}.bootBanner span{font-size:11px;letter-spacing:1px}
 </style>
 <style>.combatScene{position:relative;overflow:hidden;height:260px;border:1px solid #8a7951;border-radius:12px;background:linear-gradient(#142537,#594d40 58%,#26292b 59%,#101719);isolation:isolate}.combatScene svg{width:100%;height:100%;display:block}.combatScene .friendly{animation:advance 3s ease-in-out both}.combatScene .hostile{animation:advanceEnemy 3s ease-in-out both}.combatScene .bolt{stroke-dasharray:16 180;animation:fire 0.65s linear 5;opacity:.9}.combatScene .burst{animation:burst .7s ease-out 4;transform-box:fill-box;transform-origin:center}.combatScene .result{animation:reveal .5s 3s both}.combatScene .smoke{animation:smoke 3s ease-out both}@keyframes advance{from{transform:translateX(-65px)}to{transform:translateX(25px)}}@keyframes advanceEnemy{from{transform:translateX(65px)}to{transform:translateX(-25px)}}@keyframes fire{from{stroke-dashoffset:180}to{stroke-dashoffset:0}}@keyframes burst{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.4)}}@keyframes reveal{from{opacity:0}to{opacity:1}}@keyframes smoke{from{opacity:.2;transform:translateY(15px)}to{opacity:.6;transform:translateY(-15px)}}@media(prefers-reduced-motion:reduce){.combatScene *{animation:none!important}}</style><style>
 .cityCanvas .life-layer{pointer-events:none}.cityCanvas .life-patrol{animation:lifePatrol 9s ease-in-out infinite alternate}.cityCanvas .life-cargo{animation:lifeCargo 13s ease-in-out infinite alternate}.cityCanvas .life-smoke{animation:lifeSmoke 4s ease-out infinite;transform-box:fill-box;transform-origin:center}.cityCanvas .life-beacon{animation:lifeBeacon 1.6s ease-in-out infinite alternate}.cityCanvas .life-leg{animation:lifeStep .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}.cityCanvas .life-leg.other{animation-direction:alternate-reverse}.cityCanvas .life-scan{animation:lifeScan 5s ease-in-out infinite alternate;transform-origin:0 0}.cityCanvas .life-worker{animation:lifePatrol 7s ease-in-out infinite alternate}.cityCanvas .life-spark{animation:lifeBeacon .65s infinite alternate}.cityCanvas .life-spark:nth-child(2){animation-delay:-.4s}
@@ -150,13 +152,14 @@ button:focus-visible{outline:2px solid #f2d08b;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style><style>.gearPanel{margin:8px 0;border-color:#8e7952}.gearRow{display:grid;grid-template-columns:54px 1fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #45555b}.gearRow:last-child{border-bottom:0}.gearIcon{width:54px;height:54px;border:2px solid;border-radius:8px;background:radial-gradient(#354953,#15212a);font-size:35px;display:grid;place-items:center}.gearRow button{font-size:12px;min-height:40px}.gearRow p{margin:4px 0}</style><style>.competitionPanel{border-color:#a18a59;margin:8px 0}.rankRow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #45555b}.rankRow span{flex:1;overflow-wrap:anywhere}.rankRow b,.rankRow strong{color:#ecd099;font-variant-numeric:tabular-nums}.rankRow button{font-size:11px;max-width:48%}.competitionPanel h4{margin:12px 0 5px;color:#e2c68b}</style><style>.seasonPanel{margin:8px 0;border-color:#b39a62;background:radial-gradient(ellipse at top,#66533455,transparent 70%),#182630}.seasonPanel h3,.seasonPanel h4{color:#ead09a}.seasonPanel .bossBar{margin:10px 0}.seasonPanel .bossBar i{background:linear-gradient(90deg,#977640,#edc775)}</style><style>.explorationPanel{margin:8px 0;border-color:#8e8961}.exploration2{position:absolute;transform:translate(-50%,-50%);z-index:2;font-size:10px;padding:5px;max-width:90px;background:#26342be8;border:1px solid #adba80}.explorationLabel.ruins,.exploration2.ruins{border-color:#b9a58b}.explorationLabel.mine,.exploration2.mine{border-color:#e0bd72;color:#ffe0a0}.explorationLabel.infected,.exploration2.infected{border-color:#db7769;color:#ffac9e}.explorationLabel.outpost,.exploration2.outpost{border-color:#8ec5d0;color:#bbecf5}</style><style>.infectedPanel{margin:8px 0;border-color:#aa6659;background:radial-gradient(ellipse at top,#8c3d3433,transparent 70%),#182630}.infectedPanel h3{color:#f0a99b}.infectedPanel .rankRow button{border-color:#a46e5f}</style><style>.city3label.coreLabel{border:1px solid #d9b773;background:linear-gradient(140deg,#23333deb,#101a23f5);color:#ffe1a1;font-weight:800;box-shadow:0 2px 12px #0009;max-width:190px;z-index:4}.city3label.coreLabel.ready{border-color:#9bd19a}.city3label.coreLabel.busy{border-color:#d9b773}</style><style>#city3host .city3label{font-size:10px!important;padding:3px 5px!important;min-height:22px!important;max-width:94px!important;line-height:1.15;opacity:.9}#city3host .city3label.coreLabel{font-size:12px!important;max-width:100px!important;opacity:1}.hqAssetStatus{position:absolute;bottom:7px;left:8px;right:8px;z-index:6;width:fit-content;max-width:calc(100% - 16px);padding:4px 7px;font:10px/1.4 system-ui,sans-serif;color:#d9e9e3;background:#101c26e8;border:1px solid #78928b;border-radius:5px;pointer-events:none;overflow-wrap:anywhere}</style><style>.citymode .city3host{height:clamp(300px,calc(100dvh - 310px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),720px)}.world3host{height:clamp(320px,62dvh,720px)}</style></head>
 <body>
+<div id="bootBanner" role="status" class="bootBanner"><b>AFTERLIGHT</b><span>Initializing Sector 07…</span></div>
 <main>
   <div class="top">
     <div class="brandrow">
       <div class="brand">
-        <small>COLONY NETWORK // SECTOR 07</small>
+        <small>COLONY NETWORK // SECTOR 07</small><button type="button" data-profile="open" id="profileBadge" class="profileBadge">Commander</button>
         <h1>AFTERLIGHT</h1>
-        <div class="mini">DOMINION V5.2 · MAP-FIRST SURVIVAL STRATEGY</div>
+        <div class="mini">DOMINION V5.3 · MAP-FIRST SURVIVAL STRATEGY</div>
       </div>
       <div class="center">
         <div class="small">Power</div>
@@ -373,8 +376,20 @@ function renderEventHub(){
  $('view').innerHTML='<div class="panel"><div class="head"><b>EVENT COMMAND</b><span class="pill">'+ready.length+' rewards ready</span></div><div class="body list"><div class="card"><h3>Reward inbox</h3><p>'+(ready.length?ready.map(x=>safeBattleText(x.name)).join(' · '):'All caught up. Check back after your next mission.')+'</p><button data-polish="collect" '+(ready.length?'':'disabled')+'>Collect all available rewards</button><p class="small">Includes local login, welcome, expedition, weekly and achievement rewards. Campaign, chapter and online rewards remain separate.</p></div>'+eventCenterPanel()+dailyBossPanel()+expeditionPanel()+welcomeTrack()+achievementPanel()+'<button data-act="tab:Missions">Campaign and missions →</button></div></div>';
 }
 function applyMotionPreference(){document.body.classList.toggle('lowMotion',!!s.lowMotion);}
+
+function stableHTML(el,html){if(!el)return; if(el._afterlightHTML===html&&el.innerHTML===el._afterlightDOM)return;el.innerHTML=html;el._afterlightHTML=html;el._afterlightDOM=el.innerHTML;}
+function playerProfileSheet(){
+ const name=String(s.playerCallsign||'Commander').slice(0,24);
+ openSheet('<button class="close" data-act="close">Close ✕</button><div class="profileHero"><small>SECTOR 07 · PLAYER DOSSIER</small><h2>'+safeBattleText(name)+'</h2><p>'+safeBattleText(aiMood())+' · Core Lv '+s.l.core+' · VIP '+s.vip+'</p></div><div class="card"><label for="profileCallsign">Local commander callsign</label><input id="profileCallsign" maxlength="24" autocomplete="off" style="width:100%;padding:10px;margin:8px 0" value="'+safeBattleText(name)+'"><button data-profile="save">Save callsign</button><p class="small">Stored with your civilization. Does not change your online Genesis identity.</p></div><div class="grid2"><div class="card"><small>Power</small><h2>'+fmt(totalPower())+'</h2></div><div class="card"><small>Territories</small><h2>'+s.territory.length+'</h2></div><div class="card"><small>Operations</small><h2>'+operationProgress()+'/'+operations.length+'</h2></div><div class="card"><small>Achievements</small><h2>'+(s.achievementClaims||[]).length+'</h2></div></div><button data-act="cloud">Backup and account</button>');
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-profile]');if(!b)return;
+ if(b.dataset.profile==='open')playerProfileSheet();
+ if(b.dataset.profile==='save'){const v=String($('profileCallsign')?.value||'').trim();if(!/^[A-Za-z0-9 _-]{3,24}$/.test(v)){gameFeedback('Use 3–24 letters, numbers, spaces, _ or -');return;}s.playerCallsign=v;save();render();playerProfileSheet();gameFeedback('Commander profile saved');}
+});
+
 function settingsSheet(){
- openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
+ openSheet('<button data-act="close" class="close">Close ✕</button><h2>Command settings</h2><div class="card"><h3>Audio</h3><p>Music starts only after you enable it.</p><button data-polish="audio">Toggle music and interface sounds</button><button data-polish="voice">Stop EVA voice</button></div><div class="card"><h3>Display</h3><button data-polish="motion">'+(s.lowMotion?'Reduced motion: ON':'Reduced motion: OFF')+'</button><p>Disable decorative animations while keeping gameplay active.</p></div><div class="card"><h3>Account and story</h3><button data-profile="open">Player profile</button> <button data-act="cloud">Cloud backup &amp; account</button> <button data-prologue="0">Replay prologue</button></div>');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-polish]');if(!b||b.disabled)return;
@@ -564,20 +579,21 @@ function safeName(v){return String(v).replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().
    </div>`);
  }
  function renderHeroStrip(){
-   $('heroStrip').innerHTML=commanders.map(c=>{
+   stableHTML($('heroStrip'),commanders.map(c=>{
      const owned=s.commanders.includes(c.id); const lv=s.cmdLv[c.id]||1;
      return `<div class="heroBadge"><div class="small">${c.rarity}</div><div class="name">${c.emoji} ${c.name}</div><div class="small">${c.title}</div><div class="row" style="margin-top:8px"><span class="pill">Lv ${lv}</span><span class="pill">${owned?'Active':'Unrecruited'}</span></div></div>`;
-   }).join('');
+   }).join(''));
  }
  function nextChapter(){ return chapters[s.chapter] || null; }
  function renderTop(){
+   const p=$('profileBadge');if(p)p.textContent=s.playerCallsign||'Commander';
    $('power').textContent=fmt(totalPower());
    $('commanderLevel').textContent=s.commanderLevel;
    $('vip').textContent=s.vip;
    $('allianceState').textContent=s.alliance? 'Last Light' : 'None';
    $('aiMood').textContent=aiMood();
    const resources=[['Food','🌾','food'],['Water','💧','water'],['Energy','⚡','energy'],['Alloy','⚙️','alloy'],['Diamonds','◆','diamond']];
-   $('resources').innerHTML=resources.map(([n,ic,k])=>`<div class="res"><span>${ic} ${n}</span><b>${fmt(s.res[k])}</b></div>`).join('');
+   const resourceHost=$('resources');if(!resourceHost.querySelector('[data-resource]'))resourceHost.innerHTML=resources.map(([n,ic,k])=>`<div class="res"><span>${ic} ${n}</span><b data-resource="${k}"></b></div>`).join('');for(const [n,ic,k] of resources){const el=resourceHost.querySelector('[data-resource="'+k+'"]');const v=fmt(s.res[k]);if(el.textContent!==v)el.textContent=v;}
    const ch=nextChapter();
    $('chapterBox').innerHTML = ch ? `<div class="small">CHAPTER ${s.chapter+1} / ${chapters.length}</div><h3>${ch.name}</h3><div>${ch.text}</div><div class="row" style="margin-top:10px"><span class="pill">Reward: ${Object.entries(ch.reward).map(([k,v])=>`${v} ${k}`).join(', ')}</span><button data-act="chapter" ${!ch.done(s)?'disabled':''}>Claim Chapter Reward</button></div>` : `<h3>Campaign complete</h3><div>Your bunker is now in open-ended empire mode. Keep expanding.</div>`;
    let alerts=[];
@@ -798,7 +814,8 @@ document.addEventListener('click',e=>{
  }
  function render(){
    const scrolls=[...document.querySelectorAll(".hqWrap,.worldscroll,.heroStrip")].map(e=>[e.className,e.scrollLeft]); const pendingBuild=s.queue?{id:s.queue.id,level:s.l[s.queue.id]||0}:null; tick(); renderTop(); if(pendingBuild&&!s.queue&&(s.l[pendingBuild.id]||0)>pendingBuild.level)gameFeedback((defs.find(d=>d.id===pendingBuild.id)?.name||'Building')+' upgraded · Lv '+s.l[pendingBuild.id]); document.body.classList.toggle('constructionActive',!!s.queue);
-   $('tabs').innerHTML=['HQ','World','Events','Inventory','Alliance','PvP'].map(t=>{const active=tab===t||(t==='HQ'&&['Commanders','Legacy','Missions','AI'].includes(tab))||(t==='World'&&['Surface','Frontier','Shared'].includes(tab))||(t==='Inventory'&&tab==='Legendary');return `<button class="tabbtn ${active?'active':''}" ${active?'aria-current="page"':''} data-act="tab:${t}"><span class="navGlyph">${({HQ:'⌂',World:'◎',Inventory:'▣',Alliance:'♜',PvP:'⚔',Events:'★'})[t]}</span>${t==='HQ'?'Base':t}${t==='Events'&&rewardInbox().length?`<span class="eventBadge">${rewardInbox().length}</span>`:''}</button>`}).join('');
+   const readyCount=rewardInbox().length;
+   stableHTML($('tabs'),['HQ','World','Events','Inventory','Alliance','PvP'].map(t=>{const active=tab===t||(t==='HQ'&&['Commanders','Legacy','Missions','AI'].includes(tab))||(t==='World'&&['Surface','Frontier','Shared'].includes(tab))||(t==='Inventory'&&tab==='Legendary');return `<button class="tabbtn ${active?'active':''}" ${active?'aria-current="page"':''} data-act="tab:${t}"><span class="navGlyph">${({HQ:'⌂',World:'◎',Inventory:'▣',Alliance:'♜',PvP:'⚔',Events:'★'})[t]}</span>${t==='HQ'?'Base':t}${t==='Events'&&readyCount?`<span class="eventBadge">${readyCount}</span>`:''}</button>`}).join(''));
    document.body.classList.toggle('citymode',tab==='HQ');document.body.classList.toggle('worldmode',tab==='World'); if(tab==='HQ') renderHQ();
    if(tab==='World'){renderWorld();renderGather();$('view').insertAdjacentHTML('beforeend','<div class="panel"><div class="body row"><button data-act="tab:Shared">🌐 Genesis · Shared world</button><button data-act="tab:Surface">Surface districts &amp; Exchange</button><button data-act="tab:Frontier">Frontier operations</button></div></div>');}
    if(tab==='Commanders') renderCommanders();
@@ -807,7 +824,7 @@ document.addEventListener('click',e=>{
    if(tab==='Inventory'){renderInventory();$('view').insertAdjacentHTML('afterbegin','<div class="panel"><div class="body"><button data-act="tab:Legendary">♜ Legendary Dominion</button> <button data-act="cloud">☁ Connected Worlds</button></div></div>');} if(tab==='Legendary') $('view').innerHTML=legendaryPanel(); document.body.dataset.skin=s.skin;
    if(tab==='Shared') renderSharedWorld(); if(tab==='Surface') renderSurface(); if(tab==='Frontier') renderFrontier(); if(tab==='AI') renderAI(); if(tab==='AI') renderWarPanel(); if(tab==='Alliance')renderOnlineAlliance(); if(tab==='PvP'){$('view').innerHTML='<div class="panel"><div class="head"><b>WAR THEATER</b><span class="pill">Training / PvE</span></div><div class="body"><p>Practice combat against hostile factions. Online troop combat beta is accessible in Genesis. Supply loot and hospital recovery are enabled; rankings are pending.</p><button data-act="tab:Shared">Genesis online march beta</button><button data-act="tab:World">Open solo battle map</button></div></div>';renderWarPanel();}
    scrolls.forEach(([c,x])=>{const el=document.querySelector('.'+c);if(el)el.scrollLeft=x;});
-   $('footer').textContent=`AFTERLIGHT: DOMINION V5.2 · ${storage?'Local save active':'Storage blocked; session only'} · Built mobile-first for GitHub Pages.`;
+   $('footer').textContent=`AFTERLIGHT: DOMINION V5.3 · ${storage?'Local save active':'Storage blocked; session only'} · Built mobile-first for GitHub Pages.`;
  }
  function renderWarPanel(){const raid=s.raid; $('view').insertAdjacentHTML('beforeend',`<div class="panel"><div class="head"><b>RISE OF THE MACHINES</b><span class="pill">Defense ${defense()}</span></div><div class="body list"><div class="card"><h3>Enemy signal</h3><p>${raid?raid.name+' incoming · strength '+raid.power+' · '+timeLeft(raid.end):'Intercept a hostile faction signal to challenge an enemy raid. No raids occur until you activate this.'}</p><button data-act="raid" ${raid||Date.now()<s.raidCooldown||s.l.core<2?'disabled':''}>${raid?'Raid incoming':Date.now()<s.raidCooldown?'Signal cooldown':'Intercept signal · Core Lv 2'}</button><p>Raids repelled: ${s.raidWins}</p><button data-act="reports">Battle reports</button></div><div class="card"><h3>Military academy</h3><p>T1 Guards ${s.guards} · T2 Elites ${s.elites} · T3 Drones ${s.drones} · T4 Cyber infantry ${s.cyber} · T5 Sentinels ${s.sentinels}</p><p>${s.training?'Training: '+timeLeft(s.training.end):'Training queue idle'}</p><button data-act="advanced:cyber" ${s.l.barracks<3||s.training||!canAfford({food:150,alloy:160})?'disabled':''}>Train cyber infantry · Barracks 3 · 150 food / 160 alloy</button><button data-act="advanced:sentinels" ${s.l.hangar<4||s.training||!canAfford({energy:240,alloy:220,parts:1})?'disabled':''}>Build sentinel · Hangar 4 · 240 energy / 220 alloy / 1 part</button></div><div class="card"><h3>Neural doctrine</h3><p>${s.protocol?'Active: '+s.protocol:'Choose a permanent doctrine based on your AI alignment. Requires Lab 2 and 300 energy.'}</p><button data-act="protocol:guardian" ${s.protocol||s.moral<=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Guardian · +25 defense</button><button data-act="protocol:dominion" ${s.protocol||s.moral>=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Dominion · +20 army power</button><button data-act="protocol:observer" ${s.protocol||s.moral!==0||s.l.lab<2||s.res.energy<300?'disabled':''}>Observer · +0.3 alloy/sec</button></div><div class="card"><h3>Commander promotions</h3>${s.commanders.map(i=>`<p>${commanders[i].name} · Rank ${s.promotions[i]||0} <button data-act="promote:${i}" ${(s.cmdLv[i]||1)<3||s.inv.parts<2?'disabled':''}>Promote · 2 parts · Lv 3</button></p>`).join('')||'Recruit a commander first.'}</div></div></div>`);}
  function renderFrontier(){
@@ -1043,7 +1060,10 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-clou
  applyMotionPreference();
  render();
  if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
- setInterval(render,1000);
+ $('bootBanner')?.remove();
+ setInterval(()=>{if(!document.hidden)render();},1000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else render();});
+ window.addEventListener('pagehide',save);
 </script>
 
 <script>
