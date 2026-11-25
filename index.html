@@ -308,12 +308,49 @@ function careerPanel(){
  return '<div class="card"><h3>Commander career · '+(['Recruit','Survivor','Officer','Veteran','Warlord','Founder'][n])+'</h3><div class="progress"><i style="width:'+n*20+'%"></i></div><p>'+n+'/5 milestones</p>'+tasks.map(t=>'<p>'+(t[1]?'✓ ':'○ ')+t[0]+'</p>').join('')+'</div>';
 }
 
-function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list">${welcomeTrack()}${careerPanel()}${operationPanel()}${factionPanel()}${specialistPanel()}${dailyBossPanel()}<div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
+
+const expeditionTypes=[{name:'Supply Recovery',duration:180000,loot:{alloy:180,food:100}},{name:'Lost Archives',duration:600000,loot:{manuals:2,energy:150}},{name:'Deep Frontier',duration:1800000,loot:{parts:3,diamond:15}}];
+function expeditionPanel(){
+ const active=s.commanderExpedition,ready=active&&Date.now()>=active.end;
+ if(active){const t=expeditionTypes[active.type];if(t)return '<div class="card"><h3>COMMANDER EXPEDITIONS</h3><p>'+safeBattleText(commanders[active.id]?.name||'Commander')+' · '+t.name+'</p><p>'+(ready?'Expedition complete':timeLeft(active.end))+'</p><button data-expedition="claim" '+(ready?'':'disabled')+'>Collect supplies</button></div>';}
+ const leaders=availableLeaders();
+ return '<div class="card"><h3>COMMANDER EXPEDITIONS</h3><p>Assign one available commander to a timed mission. They cannot lead a territory march until their expedition is collected. Progress continues while offline.</p>'+expeditionTypes.map((t,i)=>'<div class="skillline"><b>'+t.name+' · '+Math.round(t.duration/60000)+' min</b><p>'+Object.entries(t.loot).map(([k,v])=>v+' '+k).join(' · ')+'</p>'+leaders.map(id=>'<button data-expedition="'+i+':'+id+'">'+safeBattleText(commanders[id].name)+'</button>').join('')+'</div>').join('')+(leaders.length?'':'<p>No available commanders.</p>')+'</div>';
+}
+function achievementDefs(){return [
+ ['core','First Stronghold',s.l.core>=2,{alloy:150}],
+ ['academy','Tactical Graduate',!!s.academyCertified,{manuals:2}],
+ ['territory','Frontier Pioneer',s.territory.length>=1,{diamond:15}],
+ ['brothers','Family Reunion',[4,5,6].every(i=>s.commanders.includes(i)),{diamond:40}],
+ ['campaign','Echoes Conquered',operationProgress()===operations.length,{parts:4,diamond:30}],
+ ['expedition','Pathfinder',(s.expeditionsCompleted||0)>=3,{manuals:2}],
+ ['diplomacy','A New Order',!!s.wardenPath,{energy:200}]
+];}
+function achievementPanel(){
+ const claimed=s.achievementClaims||[];
+ return '<div class="card"><h3>HALL OF ACHIEVEMENTS</h3><p>'+claimed.length+'/'+achievementDefs().length+' rewards claimed</p>'+achievementDefs().map(([id,n,done,loot])=>'<div class="skillline"><b>'+n+'</b><p>'+Object.entries(loot).map(([k,v])=>v+' '+k).join(' · ')+'</p><button data-achievement="'+id+'" '+(!done||claimed.includes(id)?'disabled':'')+'>'+(claimed.includes(id)?'Claimed':done?'Claim reward':'Locked')+'</button></div>').join('')+'</div>';
+}
+function eventWeek(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function eventCenterPanel(){
+ const w=eventWeek(),v=s.weeklyExpeditionEvent?.week===w?s.weeklyExpeditionEvent:{count:0,claimed:false};
+ return '<div class="card"><h3>WEEKLY EVENT · Frontier Survey</h3><p>Complete three commander expeditions this week. Resets Monday, local time.</p><div class="progress"><i style="width:'+Math.min(100,v.count/3*100)+'%"></i></div><p>'+Math.min(3,v.count)+'/3 · Reward: 300 alloy, 25 diamonds</p><button data-weekly="claim" '+(v.count<3||v.claimed?'disabled':'')+'>'+(v.claimed?'Claimed':'Collect weekly reward')+'</button><p class="small">Online alliance rallies, world boss and rankings are available separately in Genesis beta.</p><button data-act="tab:Alliance">Alliance command</button> <button data-act="tab:Shared">Genesis world</button></div>';
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-expedition],[data-achievement],[data-weekly]');if(!b||b.disabled)return;
+ if(b.hasAttribute('data-expedition')){
+ const a=b.dataset.expedition;
+ if(a==='claim'){const x=s.commanderExpedition,t=x&&expeditionTypes[x.type];if(!t||Date.now()<x.end)return;reward(t.loot);s.commanderExpedition=null;s.expeditionsCompleted=(s.expeditionsCompleted||0)+1;const w=eventWeek();if(s.weeklyExpeditionEvent?.week!==w)s.weeklyExpeditionEvent={week:w,count:0,claimed:false};s.weeklyExpeditionEvent.count++;s.message='Expedition supplies recovered.';}
+ else{const [type,id]=a.split(':').map(Number),t=expeditionTypes[type];if(!t||s.commanderExpedition||!availableLeaders().includes(id))return;s.commanderExpedition={type,id,end:Date.now()+t.duration};s.message='Commander expedition launched.';}
+ }else if(b.hasAttribute('data-achievement')){const a=achievementDefs().find(t=>t[0]===b.dataset.achievement);if(!a||!a[2]||(s.achievementClaims||[]).includes(a[0]))return;(s.achievementClaims??=[]).push(a[0]);reward(a[3]);s.message='Achievement earned: '+a[1];}
+ else{const v=s.weeklyExpeditionEvent;if(!v||v.week!==eventWeek()||v.count<3||v.claimed)return;v.claimed=true;reward({alloy:300,diamond:25});s.message='Weekly Frontier Survey complete.';}
+ save();render();
+});
+
+function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list">${welcomeTrack()}${careerPanel()}${operationPanel()}${factionPanel()}${specialistPanel()}${dailyBossPanel()}${eventCenterPanel()}${expeditionPanel()}${achievementPanel()}<div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
 const formations={assault:{name:'Assault',mult:1.15},shield:{name:'Shield wall',mult:1},recon:{name:'Recon',mult:1.05}};
 function slots(){return Math.min(3,1+Math.floor(s.l.core/3));}
 function unitsHome(){return Math.max(0,s.guards-s.injured)*2+s.elites*4+s.drones*5+s.cyber*8+s.sentinels*14;}
 function freePower(){return Math.max(0,unitsHome()-s.armies.reduce((n,m)=>n+(m.reserve|| (m.legacy?unitsHome():0)),0));}
-function availableLeaders(){return s.commanders.filter(id=>!s.armies.some(m=>(m.leaders||[]).includes(id)||m.legacy));}
+function availableLeaders(){return s.commanders.filter(id=>s.commanderExpedition?.id!==id&&!s.armies.some(m=>(m.leaders||[]).includes(id)||m.legacy));}
 function planPower(n,ids,f){return Math.floor((n+ids.reduce((a,i)=>a+(setCount(i,1)===2?12:0),0)+ids.reduce((a,id)=>a+3+2*((s.cmdLv[id]||1)-1)+(s.skills[id]||0)*4+(id===5?10+(s.brotherRanks[5]||0)*6:0),0)+(ids.length===3?12:0))*formations[f].mult);}
 function busySite(i){return s.armies.some(m=>m.site===i);}
 defs.push({id:'turret',name:'Auto Turrets',icon:'⌖',base:160,color:'#a46c61',desc:'Adds 30 defense per level.'},{id:'shield',name:'Shield Array',icon:'⬡',base:200,color:'#65a9bd',desc:'Adds 40 defense per level.'});
