@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
+<title>Afterlight: Dominion V1.6</title>
+<style>
+:root{
+  --bg:#0c1214; --panel:#162024; --panel2:#1a252b; --line:#314148; --text:#e8eee8; --muted:#93a7a0;
+  --green:#89b56a; --green2:#5f8448; --gold:#d1b36b; --red:#b15d59; --cyan:#69b1c4; --purple:#8d86d6;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:linear-gradient(180deg,#0a0f11,#0d1418 22%,#10181d);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100%}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid #50625c;background:linear-gradient(180deg,#30443c,#24342d);color:var(--text);border-radius:12px;padding:12px 14px}
+button:disabled{opacity:.45;cursor:default}
+main{max-width:980px;margin:0 auto;padding-bottom:96px}
+.top{position:sticky;top:0;z-index:50;background:rgba(7,12,14,.92);backdrop-filter:blur(10px);border-bottom:1px solid #253036;padding:env(safe-area-inset-top) 10px 8px}
+.brandrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding-top:6px}
+.brand h1{margin:0;font-size:23px;letter-spacing:4px}
+.brand small{color:#adc0b9;letter-spacing:1.3px}
+.mini{font-size:12px;color:#bfcac7}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{background:#151e22;border:1px solid #2f4048;border-radius:999px;padding:6px 10px;font-size:12px;color:#dce6df}
+.resbar{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.res{background:#182126;border:1px solid #2a393e;border-radius:12px;padding:8px;text-align:center;min-width:0}
+.res span{display:block;color:#90a49c;font-size:11px}
+.res b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heroStrip{display:flex;gap:8px;overflow:auto;padding:10px 10px 0}
+.heroBadge{min-width:180px;background:linear-gradient(180deg,#1b2630,#11181c);border:1px solid #384954;border-radius:14px;padding:10px}
+.heroBadge .name{font-weight:700}
+.panel{margin:10px;border:1px solid var(--line);background:linear-gradient(180deg,#162126,#121a1e);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px #00000033}
+.panel .head{padding:12px 14px;border-bottom:1px solid #25333a;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.panel .body{padding:12px}
+.notice{margin:10px;background:#2b2418;border:1px solid #5e4d2d;color:#ebd7aa;padding:12px 14px;border-radius:14px}
+.flex{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-block;background:#1e2b30;border:1px solid #395058;padding:5px 9px;border-radius:999px;font-size:12px;color:#dce4e1}
+.progress{height:10px;background:#0c1214;border-radius:999px;border:1px solid #28363b;overflow:hidden}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,#7ba65e,#a7cf7e)}
+.hqWrap{padding:12px;overflow:auto}
+.hq{min-width:760px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tile{position:relative;min-height:150px;background:linear-gradient(180deg,#2b3636,#1a2325);border:1px solid #4c5c60;border-radius:18px;overflow:hidden;box-shadow:inset 0 -12px 24px #00000030}
+.tile .glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 0,#ffffff1c,transparent 38%)}
+.tile .art{height:86px;display:flex;align-items:end;justify-content:center;padding-top:8px}
+.iso{width:112px;height:70px;position:relative;filter:drop-shadow(0 10px 10px #00000044)}
+.iso .topa,.iso .side1,.iso .side2,.iso .win,.iso .roof{position:absolute;display:block}
+.iso .roof{left:16px;top:4px;width:80px;height:28px;background:var(--c);transform:skew(-32deg);border:1px solid #d0d9d7}
+.iso .side1{left:4px;top:24px;width:48px;height:32px;background:color-mix(in srgb,var(--c) 55%, #30423e);transform:skewY(28deg);border:1px solid #233532}
+.iso .side2{left:50px;top:24px;width:48px;height:32px;background:color-mix(in srgb,var(--c) 40%, #1f2d2a);transform:skewY(-28deg);border:1px solid #233532}
+.iso .win{left:40px;top:34px;width:14px;height:10px;background:#c7ef9a;box-shadow:18px -3px 0 #c7ef9a, -18px 3px 0 #c7ef9a}
+.tile .info{padding:8px 12px 12px}
+.tile .name{font-weight:700;font-size:15px}
+.tile small{color:#afc0ba}
+.badge{position:absolute;top:10px;right:10px;background:#0d1518;border:1px solid #3d5155;border-radius:999px;padding:5px 8px;font-size:11px}
+.timer{position:absolute;left:10px;top:10px;background:#47331a;border:1px solid #9d7c45;color:#f2dfb0;border-radius:999px;padding:4px 8px;font-size:11px}
+.tile.locked{filter:saturate(.3);opacity:.7}
+.tile .cta{position:absolute;inset:auto 10px 10px 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:linear-gradient(180deg,#1c272c,#151d21);border:1px solid #34454d;border-radius:16px;padding:12px}
+.card h3,.panel h3,.panel h2{margin:0 0 8px}
+.card p{margin:6px 0;color:#b6c5c0;line-height:1.35}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(10,15,18,.97);backdrop-filter:blur(10px);border-top:1px solid #263239;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+.tabsInner{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.tabbtn{padding:10px 4px;border-radius:14px;font-size:11px;background:#11181c;border:1px solid #27353d;color:#d3dfdc}
+.tabbtn.active{background:linear-gradient(180deg,#465a4d,#2f4137);border-color:#90a97c}
+.list{display:grid;gap:10px}
+.cmd{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
+.portrait{width:72px;height:72px;border-radius:16px;background:radial-gradient(circle at 35% 30%,#778b94,#29353e 60%);border:1px solid #546670;display:flex;align-items:end;justify-content:center;font-size:42px}
+.stars{letter-spacing:2px;color:#f2cf77}
+.site{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:linear-gradient(180deg,#1b262b,#141c20);border:1px solid #34454d;border-radius:16px;padding:12px}
+.site .icon{width:54px;height:54px;border-radius:14px;background:#243137;display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid #42575e}
+.mission{background:linear-gradient(180deg,#2e2819,#1e1a12);border:1px solid #5e4f2e;border-radius:16px;padding:12px;margin:10px}
+.inventory{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.item{background:linear-gradient(180deg,#1b262c,#141d21);border:1px solid #35474e;border-radius:16px;padding:12px}
+.item .icon{font-size:28px}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.center{text-align:center}
+.small{font-size:12px;color:#9fb1ab}
+.big{font-size:22px;font-weight:800}
+.footer{padding:14px;text-align:center;color:#8fa19b;font-size:12px}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:end;z-index:100}
+.modal.show{display:flex}
+.sheet{width:100%;max-width:980px;margin:0 auto;background:linear-gradient(180deg,#172127,#10181d);border-radius:22px 22px 0 0;border-top:1px solid #374750;max-height:86vh;overflow:auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom))}
+.sheet .close{float:right;padding:6px 10px}
+.line{height:1px;background:#28363b;margin:12px 0}
+@media (max-width:700px){
+  .resbar{grid-template-columns:repeat(3,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .inventory{grid-template-columns:1fr 1fr}
+  .hq{min-width:640px}
+}
+.worldscroll{overflow:auto}.worldmap{position:relative;min-width:650px;height:580px;background:radial-gradient(ellipse at 25% 28%,#3e493b,transparent 45%),radial-gradient(ellipse at 80% 70%,#594e37,transparent 50%),#25352f}.worldmap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.mapnode{position:absolute;transform:translate(-50%,-50%);width:104px;padding:5px;background:#172420ee;box-shadow:0 5px 15px #0008;border-color:#8a9674}.mapnode span,.mapnode b,.mapnode small{display:block}.mapnode span{font-size:25px}.mapnode b{font-size:10px}.mapnode small{font-size:9px;color:#b5c7ae}.mapnode.owned{border-color:#a9d47d;background:#304c2d}.mapnode.marching{border-color:#f6ce72}.homebase{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);background:#14282e;border:1px solid #82c8cb;padding:10px;border-radius:9px;font-weight:bold}.route{animation:dash 1s linear infinite}@keyframes dash{to{stroke-dashoffset:-17}}.tile .info{padding-bottom:35px}.tile{min-height:180px}.hqWrap{overscroll-behavior-x:contain}.tabbtn{min-width:0;font-size:10px}  .tile .win{animation:reactorPulse 2s infinite alternate}.tile .art{position:relative}.tile .art:after{content:"";position:absolute;bottom:4px;left:12%;width:5px;height:5px;background:#d8c69a;border-radius:50%;box-shadow:0 5px #819c8d;animation:worker 1.6s linear infinite alternate}@keyframes worker{to{transform:translateX(120px)}}@keyframes reactorPulse{to{opacity:.45}}.marching{animation:reactorPulse .8s infinite alternate}@media(prefers-reduced-motion:reduce){*{animation:none!important}} 
+.tabsInner{grid-template-columns:repeat(7,1fr)} .tabbtn{font-size:10px;padding:10px 1px}.worldmap{min-width:850px;min-height:680px;background:radial-gradient(ellipse at 75% 15%,#53615e55,transparent 45%),repeating-linear-gradient(125deg,#172a2e 0 35px,#253738 37px 39px,#1c2a2d 41px 75px)}.frontierHero{padding:25px 16px;border-radius:14px;background:linear-gradient(120deg,#101c26,#314d55,#121b25);border:1px solid #66858a;color:#e8f5f5}.frontierHero h2{font-size:25px;margin:12px 0}.skillline{border-top:1px solid #40525a;padding:12px 0}.skillline button{margin:5px 0}.tile .art{background:radial-gradient(ellipse at center,#627d6844,transparent 65%)}
+
+/* Age of Empires: original vector city */
+body.citymode{background:#0b1012} .citymode .top{padding:calc(env(safe-area-inset-top) + 3px) 8px 5px}.citymode .brand h1{font-size:17px;letter-spacing:3px}.citymode .brand .mini,.citymode .brand small,.citymode .heroStrip{display:none}.citymode .chips{margin-top:4px;gap:4px}.citymode .chip{padding:3px 6px;font-size:10px}.citymode .resbar{grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-top:5px}.citymode .res{padding:4px 2px;border-radius:5px}.citymode .res span{font-size:9px}.citymode .res b{font-size:12px}.citymode #chapterBox{margin:5px 8px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}.citymode #chapterBox h3{font-size:14px;margin:2px 0}.citymode #chapterBox button{font-size:11px;padding:9px}.citymode #notice{margin:4px 8px;padding:5px 8px;font-size:11px;min-height:0}.citymode .tabsInner{grid-template-columns:repeat(8,minmax(0,1fr))}.tabsInner{grid-template-columns:repeat(8,minmax(0,1fr))}.tabbtn{font-size:10px;overflow:hidden}.cityViewport{position:relative;overflow:auto;max-height:68vh;min-height:390px;background:#121b1b;border:1px solid #39484a;overscroll-behavior:contain}.cityCanvas{position:relative;margin:auto;min-width:100%;width:100%;aspect-ratio:600/895}.cityCanvas svg{display:block;width:100%;height:100%}.cityCanvas .building{cursor:pointer;outline:none}.cityCanvas .building:focus-visible .outline{stroke:#fff;stroke-width:3}.cityCanvas .building:hover .outline{stroke:#cbe6b1}.cityCanvas .lamp{animation:glimmer 2s infinite alternate}.cityCanvas .worker{animation:walk 5s linear infinite}.cityCanvas .steam{animation:steam 3s ease-out infinite}.cityTools{display:flex;align-items:center;gap:6px;padding:6px 9px;background:#151f22}.cityTools button{padding:7px 10px;font-size:12px}.cityTools small{flex:1}.citymode #footer{font-size:10px}.citymode .panel{margin:7px 8px}.citymode .panel .head{padding:7px 10px}@keyframes glimmer{to{opacity:.3}}@keyframes walk{0%{transform:translate(0,0)}50%{transform:translate(55px,28px)}100%{transform:translate(0,0)}}@keyframes steam{0%{opacity:.5;transform:translateY(0)}100%{opacity:0;transform:translateY(-20px)}}@media(prefers-reduced-motion:reduce){.cityCanvas *{animation:none!important}}
+.portrait{overflow:hidden;width:86px;height:96px}.portrait svg{width:100%;height:100%}.cmd{grid-template-columns:86px 1fr}.evaScene{background:radial-gradient(ellipse at top,#254854,#0d171d 70%);padding:18px;border:1px solid #4a8b9e;border-radius:16px;text-align:center}.evaScene svg{width:120px;display:block;margin:0 auto 15px}.evaScene small{letter-spacing:2px;color:#8ddbea}
+.citymode .top{background:linear-gradient(180deg,#101a22,#152229);box-shadow:0 4px 18px #0008}.citymode .brand h1{color:#e8d6a6;text-shadow:0 2px 4px #000}.citymode .chips .chip:nth-child(2),.citymode .chips .chip:nth-child(3){display:none}.citymode .cityViewport{max-height:72dvh;min-height:340px;border-color:#75664a}.citymode .panel{border-radius:8px}.tabsInner{grid-template-columns:repeat(8,minmax(0,1fr))!important}.tabbtn{font-size:9px;padding:9px 0;border-radius:6px}.tabbtn.active{background:linear-gradient(#635b3d,#343322);border-color:#d0b579;color:#ffedbd}.citymode #notice{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.citymode .res{background:linear-gradient(#283439,#121e24);border-color:#5a5949}.citymode .res b{color:#f2e1b5}.citymode .cityTools{background:linear-gradient(#27343a,#192227)}.citymode .cityCanvas{filter:contrast(1.07) saturate(1.12)}
+.empire .head{background:linear-gradient(110deg,#3b3423,#17262a);color:#f1d9a0}.empire .card{border-color:#74603d}.empire button{background:linear-gradient(#665634,#3c3220);border-color:#a58c55}.tabbtn.active{box-shadow:inset 0 2px #c9a765}.citymode .top{box-shadow:0 3px 12px #0009}.surfaceMap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;background:radial-gradient(ellipse at top,#5b6445,#172b29);border-radius:12px}.surfaceLot{min-width:0;background:#253a32aa;padding:5px;font-size:12px}.surfaceLot svg{display:block;width:100%;height:90px}.surfaceLot small{display:block}
+.citymode .cityViewport{border:1px solid #887550;background:#101b23;box-shadow:inset 0 0 30px #000}.citymode .cityCanvas svg{background:#101a20}.citymode .top{background:linear-gradient(180deg,#202d36,#0d171f);border-bottom:1px solid #9b8251}.citymode .res{background:linear-gradient(180deg,#26353d,#101a21);border-color:#52615c}.citymode .cityTools{background:linear-gradient(180deg,#26333b,#152128)}.citymode .panel .head{background:linear-gradient(90deg,#33414a,#142029);color:#e8d5a2}.tabbtn.active{box-shadow:inset 0 1px #c8b27a,0 0 8px #b09b5522}.cityCanvas .building{filter:drop-shadow(0 2px 1px #0006)}.cityCanvas .worker{filter:drop-shadow(0 0 3px #e0ffb4)}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="brandrow">
+      <div class="brand">
+        <small>COLONY NETWORK // SECTOR 07</small>
+        <h1>AFTERLIGHT</h1>
+        <div class="mini">DOMINION V1.6 · AI-DRIVEN SURVIVAL STRATEGY</div>
+      </div>
+      <div class="center">
+        <div class="small">Power</div>
+        <div class="big" id="power">0</div>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip">Commander Lv <b id="commanderLevel">1</b></div>
+      <div class="chip">VIP <b id="vip">1</b></div>
+      <div class="chip">Alliance <b id="allianceState">None</b></div>
+      <div class="chip">AI <b id="aiMood">Observer</b></div>
+    </div>
+    <div class="resbar" id="resources"></div>
+  </div>
+
+  <div class="mission" id="chapterBox"></div>
+  <div class="notice" id="notice"></div>
+  <div class="heroStrip" id="heroStrip"></div>
+  <div id="view"></div>
+  <div class="footer" id="footer"></div>
+</main>
+
+<div class="tabs">
+  <div class="tabsInner" id="tabs"></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.floor(n).toLocaleString();
+const defs=[
+  {id:'core',name:'AI Core',icon:'◈',base:120,color:'#8b8fdb',desc:'The heart of the bunker. Raises the max level of all other structures and unlocks campaign chapters.'},
+  {id:'reactor',name:'Fusion Reactor',icon:'ϟ',base:80,color:'#d3aa65',desc:'Produces energy and powers advanced systems.'},
+  {id:'farm',name:'Hydroponics',icon:'♧',base:70,color:'#72a673',desc:'Feeds your population and troops.'},
+  {id:'water',name:'Purifier',icon:'≈',base:70,color:'#6ea8c7',desc:'Creates clean water for survivors and healing.'},
+  {id:'quarters',name:'Quarters',icon:'▤',base:90,color:'#b7a58a',desc:'Increases your population cap.'},
+  {id:'lab',name:'Research Lab',icon:'⌬',base:95,color:'#8a88c8',desc:'Unlocks tech, troop buffs and drones.'},
+  {id:'barracks',name:'Barracks',icon:'⛨',base:90,color:'#b07364',desc:'Trains guards and unlocks marching.'},
+  {id:'med',name:'Infirmary',icon:'✚',base:85,color:'#7ab2a7',desc:'Heals troops and reduces combat losses.'},
+  {id:'forge',name:'Workshop',icon:'⚙',base:85,color:'#9a9376',desc:'Produces alloy for construction and gear.'},
+  {id:'market',name:'Black Market',icon:'◆',base:100,color:'#8b6aa4',desc:'Lets you buy items with diamonds and alliance coins.'},
+  {id:'hangar',name:'Drone Hangar',icon:'✦',base:110,color:'#6f95ba',desc:'Deploys drones and improves your march strength.'},
+  {id:'wall',name:'Blast Wall',icon:'▣',base:95,color:'#718287',desc:'Boosts defense and city durability.'},
+];
+const commanders=[
+  {id:0,name:'Mara Voss',title:'The Architect',rarity:'Legendary',emoji:'🛠️',perk:'Construction speed +20%',stars:3,cost:180,desc:'Keeps your build timers moving and your bunker expanding fast.'},
+  {id:1,name:'Silas Reed',title:'The Ghost',rarity:'Epic',emoji:'🪖',perk:'March rewards +15%',stars:2,cost:160,desc:'An expert scavenger with a talent for striking first.'},
+  {id:2,name:'Dr. Lena Cross',title:'The Healer',rarity:'Epic',emoji:'🧬',perk:'Healing and trust +10%',stars:2,cost:150,desc:'Keeps survivors alive and morale from collapsing.'},
+  {id:3,name:'EVA',title:'The Awakening',rarity:'Mythic AI',emoji:'🤖',perk:'Research speed +20%',stars:4,cost:220,desc:'A proto-conscious AI avatar tied directly to the core.'},
+  {id:4,name:'Dustin Jr.',title:'The Vanguard',rarity:'Legendary',emoji:'🛡️',perk:'+12 defense',stars:5,cost:240,desc:'The eldest of the three brothers, a steadfast protector who stands between the city and the wasteland.'},
+  {id:5,name:'Logan',title:'The Pathfinder',rarity:'Legendary',emoji:'⚔️',perk:'+10 army power',stars:5,cost:240,desc:'A fearless explorer and born leader who pushes deep into the frontier to claim new ground.'},
+  {id:6,name:'Damien',title:'The Innovator',rarity:'Legendary',emoji:'⚡',perk:'+0.4 energy per second',stars:5,cost:240,desc:'A brilliant young innovator whose ideas keep the reactors humming and the future alive.'}
+];
+const sites=[
+  {id:0,name:'Supply Depot',icon:'📦',req:8,reward:{alloy:160,food:80},time:18,type:'resource'},
+  {id:1,name:'Relay Tower',icon:'📡',req:14,reward:{energy:130,diamond:15},time:22,type:'intel'},
+  {id:2,name:'Abandoned Hospital',icon:'🏥',req:20,reward:{water:120,medkits:2},time:24,type:'support'},
+  {id:3,name:'Industrial Zone',icon:'🏭',req:30,reward:{alloy:260,parts:2},time:32,type:'resource'},
+  {id:4,name:'Data Vault',icon:'💾',req:40,reward:{manuals:3,diamond:25},time:35,type:'tech'},
+  {id:5,name:'Machine Outpost',icon:'⚔️',req:55,reward:{alloy:380,energy:250,diamond:40},time:42,type:'combat'},
+];
+sites.push(...[
+{id:6,name:'Ashfall Refinery',icon:'🏭',req:70,reward:{alloy:520,parts:3},time:48,type:'resource'},
+{id:7,name:'Iron Legion Base',icon:'⚔️',req:90,reward:{diamond:50,alloy:700},time:55,type:'combat'},
+{id:8,name:'Silent Observatory',icon:'📡',req:110,reward:{manuals:4,energy:600},time:60,type:'intel'},
+{id:9,name:'Citadel Zero',icon:'☢️',req:150,reward:{diamond:100,alloy:1200,parts:5},time:75,type:'boss'}]);
+sites.push(...[
+{id:10,name:'Blackwater Port',icon:'⚓',req:180,reward:{alloy:1500,parts:5},time:80,type:'resource'},
+{id:11,name:'Frostline Station',icon:'❄',req:220,reward:{energy:1400,manuals:5},time:90,type:'intel'},
+{id:12,name:'Red Cathedral',icon:'♜',req:270,reward:{alloy:2200,diamond:120},time:100,type:'combat'},
+{id:13,name:'The Hollow',icon:'◉',req:320,reward:{parts:10,diamond:150},time:110,type:'boss'},
+{id:14,name:'Obsidian Gate',icon:'⬡',req:400,reward:{alloy:3500,diamond:200},time:120,type:'boss'},
+{id:15,name:'Nexus Prime',icon:'◈',req:500,reward:{alloy:5000,diamond:300,parts:15},time:150,type:'boss'}]);
+const gearList=[
+  {id:'visor',name:'Recon Visor',bonus:'March +3',cost:1,icon:'🕶️'},
+  {id:'gauntlet',name:'Builder Gauntlet',bonus:'Build -5%',cost:1,icon:'🧤'},
+  {id:'medrig',name:'Field Med Rig',bonus:'Healing +5%',cost:1,icon:'💉'},
+  {id:'corechip',name:'Core Chip',bonus:'Research +5%',cost:2,icon:'💽'}
+];
+const chapters=[
+  {name:'The Knock', text:'Answer the strangers at the blast door and shape your AI.', done:s=>s.flags.knock, reward:{alloy:150}},
+  {name:'Restore Command', text:'Upgrade the AI Core to level 2.', done:s=>s.l.core>=2, reward:{alloy:180,diamond:15}},
+  {name:'Raise a Defense', text:'Construct the Barracks.', done:s=>s.l.barracks>=1, reward:{alloy:160}},
+  {name:'Field Your First March', text:'Train 4 guards total.', done:s=>s.guards>=4, reward:{food:100,alloy:140}},
+  {name:'Scout the Wasteland', text:'Capture the Supply Depot.', done:s=>s.territory.includes(0), reward:{diamond:20,alloy:180}},
+  {name:'Chain of Command', text:'Recruit 2 commanders.', done:s=>s.commanders.length>=2, reward:{manuals:2,alloy:180}},
+  {name:'Awaken Knowledge', text:'Complete 2 research projects.', done:s=>s.tech>=2, reward:{parts:2,diamond:20}},
+  {name:'Steel and Circuitry', text:'Unlock the Drone Hangar.', done:s=>s.l.hangar>=1, reward:{alloy:240,diamond:25}},
+  {name:'Hold the Line', text:'Upgrade Blast Wall to level 2.', done:s=>s.l.wall>=2, reward:{medkits:2,alloy:200}},
+  {name:'Afterlight Rising', text:'Reach 50 power troops and secure 3 sites.', done:s=>armyPower(s)>=50&&s.territory.length>=3, reward:{diamond:30,alloy:320}},
+];
+chapters.push(
+{name:'Dark Frontier',text:'Secure Citadel Zero.',done:s=>s.territory.includes(9),reward:{alloy:800,parts:4}},
+{name:'A signal in the dark',text:'Resolve the buried intelligence transmission in Frontier.',done:s=>!!s.frontierChoice,reward:{diamond:80,manuals:3}},
+{name:'Forged in darkness',text:'Craft a piece of frontier equipment.',done:s=>s.crafted>0,reward:{parts:5,alloy:900}},
+{name:'The last gate',text:'Capture Nexus Prime.',done:s=>s.territory.includes(15),reward:{diamond:500,alloy:5000}},
+{name:'Brothers of Afterlight',text:'Recruit Dustin Jr., Logan, and Damien.',done:s=>[4,5,6].every(id=>s.commanders.includes(id)),reward:{manuals:3,diamond:100}},
+{name:'Family Legacy',text:'Train one signature ability for each of the three brothers.',done:s=>[4,5,6].every(id=>(s.brotherRanks?.[id]||0)>=1),reward:{parts:6,alloy:1200}},
+{name:'The Oath of Three',text:'Activate the Brothers of Afterlight bond.',done:s=>!!s.brotherBonded,reward:{diamond:150,alloy:1500}});
+const fresh=()=>({
+  ver:'1.6',
+  res:{food:320,water:280,energy:240,alloy:520,diamond:80,coins:0},
+  inv:{speed1:5,speed5:2,manuals:2,medkits:1,parts:0,crates:1},
+  l:{core:1,reactor:1,farm:1,water:1,quarters:1,lab:0,barracks:0,med:0,forge:1,market:0,hangar:0,wall:1},
+  people:6,popIdle:6,trust:50,moral:0,commanderLevel:1,vip:1,queue:null,march:null,last:Date.now(),
+  commanders:[],cmdLv:{},cmdGear:{},tech:0,techSpent:0,researchQueue:null,
+  guards:0,drones:0,injured:0,territory:[],alliance:null,allianceCoins:0,donations:0,
+  flags:{knock:false,refugees:false},chapter:0,dailyClaimed:[],dailySeed:new Date().toDateString(),message:'The core hums to life. Commander, your bunker awaits.'
+});
+let s=fresh();
+const key='afterlight_v04';
+let storage=true, tab='HQ', selected=null;
+try{
+  const raw=localStorage.getItem(key);
+  if(raw){
+    const parsed=JSON.parse(raw);
+    if(parsed && parsed.l && parsed.res) s=Object.assign(fresh(), parsed);
+  }
+}catch(e){storage=false}
+s.ver='1.6'; s.familyNames??={}; s.awakening??=null; for(const c of commanders.slice(4)){if(s.familyNames[c.id])c.name=s.familyNames[c.id];} s.skills??={};s.crafted??=0;s.frontierChoice??=null; s.elites??=0; s.reports??=[]; s.scouted??=[]; s.training??=null; s.campaignWins??=0;
+s.l.turret??=0;s.l.shield??=0;s.cyber??=0;s.sentinels??=0;s.protocol??=null;s.raid??=null;s.raidWins??=0;s.promotions??={};s.raidCooldown??=0;
+s.brotherRanks??={4:0,5:0,6:0};s.brotherBonded??=false;s.legacyOath??=null;s.gather??=null;s.gathered??=0;s.familyMarches??=0;
+s.armies??=[]; if(s.march){s.armies.push({...s.march,legacy:true,formation:'Legacy',leader:'Original expedition',start:Date.now()});s.march=null;}
+s.loginDay??='';s.loginStreak??=0;s.vipXP??=0;s.allianceTech??={industry:0,fortification:0};
+s.surface??={};s.surfaceQueue??=null;s.demoPacks??=[];s.demoVipXP??=0;
+const districts=[{name:'Sunrise Farms',core:2,cost:300,res:'food',rate:.8,icon:'🌱'},{name:'Raincatch Station',core:3,cost:450,res:'water',rate:.8,icon:'💧'},{name:'Solar Fields',core:4,cost:650,res:'energy',rate:1,icon:'☀️'},{name:'Salvage District',core:5,cost:900,res:'alloy',rate:1,icon:'⚙️'},{name:'Citizens Quarter',core:6,cost:1200,res:'food',rate:1.5,icon:'🏘️'},{name:'Dominion Spire',core:8,cost:2000,res:'energy',rate:2,icon:'◈'}];
+const packs=[{name:'Survivor',price:'0.99',xp:100,gems:100},{name:'Commander',price:'4.99',xp:500,gems:550},{name:'Expansion',price:'9.99',xp:1000,gems:1200},{name:'Dominion',price:'19.99',xp:2000,gems:2600},{name:'Legendary',price:'49.99',xp:5000,gems:7000},{name:'Emperor',price:'99.99',xp:10000,gems:15000}];
+function surfaceRate(r){return districts.reduce((n,d,i)=>n+(d.res===r?d.rate*(s.surface[i]||0):0),0)}
+function renderSurface(){const q=s.surfaceQueue; $('view').innerHTML=`<div class="panel"><div class="head"><b>BEYOND THE SURFACE</b><span class="pill">AI Core ${s.l.core}</span></div><div class="body"><p>EVA: The surface is habitable again. Rebuild our civilization beneath the open sky.</p><div class="surfaceMap">${districts.map((d,i)=>{let l=s.surface[i]||0;return `<button class="surfaceLot" data-act="district:${i}"><svg viewBox="0 0 140 90"><path d="M5 58L70 24L135 58L70 88Z" fill="#354638" stroke="#9da57a"/><path d="M27 48L70 24L113 48L70 72Z" fill="${l?'#b3a177':'#535b51'}"/><path d="M27 48V65L70 86V72Z" fill="#34443e"/><path d="M113 48V65L70 86V72Z" fill="#23352f"/>${l?`<path d="M45 46V${24-Math.min(l,5)*3}L70 8L95 ${24-Math.min(l,5)*3}V46L70 60Z" fill="#708d80" stroke="#b6d7b7"/><circle cx="70" cy="30" r="6" fill="#dbefb0"/>`:''}</svg><b>${d.icon} ${d.name}</b><small>${q?.id===i?'Building · '+timeLeft(q.end):l?'Level '+l:'Core '+d.core}</small></button>`}).join('')}</div><p>Surface production: ${['food','water','energy','alloy'].map(r=>r+' +'+surfaceRate(r).toFixed(1)+'/s').join(' · ')}</p></div></div><div class="panel"><div class="head"><b>Dominion Exchange</b><span class="pill">Sandbox</span></div><div class="body"><p>Preview future purchase packages. No real payment, no billing, and no transferable value. Each demo pack can be tested once.</p><p>VIP experience from demo packs: ${fmt(s.demoVipXP)}</p>${packs.map((p,i)=>`<div class="card"><b>${p.name} pack</b><p>Proposed price $${p.price} · ${p.gems} diamonds · ${p.xp} VIP XP</p><button data-act="demopack:${i}" ${s.demoPacks.includes(i)?'disabled':''}>${s.demoPacks.includes(i)?'Tested':'Simulate free purchase'}</button></div>`).join('')}</div></div>`;}
+function districtSheet(i){const d=districts[i];if(!d)return;const l=s.surface[i]||0,c=Math.ceil(d.cost*1.65**l);openSheet(`<button class="close" data-act="close">Close ✕</button><h2>${d.name}</h2><p>Level ${l} · +${d.rate} ${d.res}/sec per level</p><p>Requires AI Core ${d.core} · ${c} alloy · ${30+l*15}s</p><button data-act="districtbuild:${i}" ${s.surfaceQueue||s.l.core<d.core||l>=s.l.core||s.res.alloy<c?'disabled':''}>${l?'Upgrade':'Construct'}</button>`)}
+function dayKey(offset=0){const d=new Date();d.setDate(d.getDate()+offset);return d.toDateString()}
+function vipGain(n){s.vipXP+=n;s.vip=Math.max(s.vip,Math.min(20,1+Math.floor(s.vipXP/100)))}
+function loginReward(){const streak=s.loginDay===dayKey(-1)?s.loginStreak+1:1;return {alloy:200+Math.min(streak,7)*50,diamond:10+Math.min(streak,7)*5,speed1:1}}
+function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list"><div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
+const formations={assault:{name:'Assault',mult:1.15},shield:{name:'Shield wall',mult:1},recon:{name:'Recon',mult:1.05}};
+function slots(){return Math.min(3,1+Math.floor(s.l.core/3));}
+function unitsHome(){return Math.max(0,s.guards-s.injured)*2+s.elites*4+s.drones*5+s.cyber*8+s.sentinels*14;}
+function freePower(){return Math.max(0,unitsHome()-s.armies.reduce((n,m)=>n+(m.reserve|| (m.legacy?unitsHome():0)),0));}
+function availableLeaders(){return s.commanders.filter(id=>!s.armies.some(m=>(m.leaders||[]).includes(id)||m.legacy));}
+function planPower(n,ids,f){return Math.floor((n+ids.reduce((a,id)=>a+3+2*((s.cmdLv[id]||1)-1)+(s.skills[id]||0)*4+(id===5?10+(s.brotherRanks[5]||0)*6:0),0)+(ids.length===3?12:0))*formations[f].mult);}
+function busySite(i){return s.armies.some(m=>m.site===i);}
+defs.push({id:'turret',name:'Auto Turrets',icon:'⌖',base:160,color:'#a46c61',desc:'Adds 30 defense per level.'},{id:'shield',name:'Shield Array',icon:'⬡',base:200,color:'#65a9bd',desc:'Adds 40 defense per level.'});
+function defense(){return (s.commanders.includes(4)?12:0)+(s.brotherRanks?.[4]||0)*8+Math.max(0,armyPower()-(unitsHome()-freePower()))+s.l.wall*12+s.l.turret*30+s.l.shield*40+(s.protocol==='guardian'?25:0)+(s.brotherBonded?15:0)+s.allianceTech.fortification*10}
+function save(){try{localStorage.setItem(key,JSON.stringify(s))}catch(e){storage=false}}
+function prodRates(){
+  return {
+    food:surfaceRate('food')+s.l.farm*0.72 + s.people*0.02,
+    water:surfaceRate('water')+s.l.water*0.68,
+    energy:surfaceRate('energy')+s.l.reactor*0.62+(s.commanders.includes(6)?.4:0)+((s.brotherRanks?.[6]||0)*0.25),
+    alloy:surfaceRate('alloy')+s.allianceTech.industry*.15+s.l.forge*0.58 + (s.protocol==='observer'?.3:0) + (s.territory.includes(3)?0.18:0),
+  }
+}
+function armyPower(st=s){
+  return (st.commanders.includes(5)?10:0)+((st.brotherRanks?.[5]||0)*6)+(st.brotherBonded?15:0)+Math.max(0,st.guards-st.injured)*2 + st.drones*5 + (st.elites||0)*4 + st.tech*3 + st.commanders.reduce((n,id)=>n+3+((st.cmdLv[id]||1)-1)*2+(st.cmdGear[id]||[]).length,0) + st.l.wall + (st.cyber||0)*8 + (st.sentinels||0)*14 + (st.protocol==='dominion'?20:0) + Object.values(st.skills||{}).reduce((a,b)=>a+b*4,0) + Object.values(st.promotions||{}).reduce((a,b)=>a+b*5,0);
+}
+function totalPower(){
+  return Object.values(s.surface).reduce((a,b)=>a+b,0)*180+Object.values(s.l).reduce((a,b)=>a+b,0)*120 + armyPower()*45 + s.commanders.length*180 + s.tech*120 + s.territory.length*220;
+}
+function aiMood(){ return s.moral>0 ? 'Guardian' : s.moral<0 ? 'Dominion' : 'Observer'; }
+function popCap(){ return 6 + s.l.quarters*10; }
+function buildingCost(id){ const d=defs.find(x=>x.id===id); return Math.round(d.base*Math.pow(1.58,s.l[id]||0)); }
+function queueSeconds(id){ let t = 10 + (s.l[id]||0)*8; if(s.commanders.includes(0)) t*=0.8; t*=Math.max(.55,1-(s.skills[0]||0)*.06); return Math.max(1,Math.round(t*(1-s.vip*.02))); }
+function currentDaily(){
+  if(s.dailySeed!==new Date().toDateString()){ s.dailySeed=new Date().toDateString(); s.dailyClaimed=[]; }
+  return [
+    {id:'daily1',name:'Collect 400 food',done:()=>s.res.food>=400,reward:{alloy:70}},
+    {id:'daily2',name:'Train 2 guards',done:()=>s.guards>=2,reward:{diamond:10}},
+    {id:'daily3',name:'Upgrade any building',done:()=>Object.values(s.l).some(v=>v>=2),reward:{manuals:1}},
+    {id:'daily4',name:'Capture 1 site',done:()=>s.territory.length>=1,reward:{parts:1}}
+  ];
+}
+function tick(){
+ if(s.surfaceQueue&&Date.now()>=s.surfaceQueue.end){const i=s.surfaceQueue.id;s.surface[i]=(s.surface[i]||0)+1;s.surfaceQueue=null;s.message=districts[i].name+" completed.";}
+  const now=Date.now();
+  let dt=Math.max(0,Math.min(60*60*6,Math.floor((now-s.last)/1000)));
+  if(dt>0){
+    const p=prodRates();
+    s.res.food=Math.min(999999,s.res.food+p.food*dt);
+    s.res.water=Math.min(999999,s.res.water+p.water*dt);
+    s.res.energy=Math.min(999999,s.res.energy+p.energy*dt);
+    s.res.alloy=Math.min(999999,s.res.alloy+p.alloy*dt);
+    s.last = now;
+  }
+  if(s.queue && now>=s.queue.end){
+    s.l[s.queue.id] = (s.l[s.queue.id]||0) + 1;
+    s.message = `${defs.find(d=>d.id===s.queue.id).name} upgraded successfully.`;
+    if(s.queue.id==='quarters') s.popIdle = Math.min(s.people, popCap());
+    s.queue = null;
+  }
+  if(s.researchQueue && now>=s.researchQueue.end){
+    s.tech += 1;
+    s.message = `Research complete: ${s.researchQueue.name}.`;
+    s.researchQueue = null;
+  }
+  for(const m of s.armies.filter(m=>now>=m.end)){resolveArmy(m);s.armies=s.armies.filter(x=>x!==m);}
+  if(s.gather && now>=s.gather.end){reward({[s.gather.resource]:s.gather.amount});s.gathered++;s.message='Gathering convoy returned: '+s.gather.amount+' '+s.gather.resource;s.gather=null;}
+  if(s.training && now>=s.training.end){s[s.training.unit]+=s.training.count;s.message=`Training complete: ${s.training.count} ${s.training.unit}.`;s.training=null;}
+  if(s.raid&&now>=s.raid.end){const enemy=s.raid.power,power=defense(),win=power>=enemy;let injured=win?0:Math.min(2,Math.max(0,s.guards-s.injured));s.injured+=injured;if(win){reward({alloy:200,parts:1,diamond:10});s.raidWins++;}else{s.res.alloy=Math.max(0,s.res.alloy-100);}s.reports.push({name:'Bunker defense · '+s.raid.name,power,enemy,win,injured});s.reports=s.reports.slice(-30);s.message=win?'Raid repelled! Rewards recovered.':'Raid breached defenses. Lost up to 100 alloy.';s.raid=null;s.raidCooldown=now+60000;}
+  save();
+}
+function canAfford(costObj){ return Object.entries(costObj).every(([k,v])=> (k in s.res ? s.res[k] : s.inv[k]||0) >= v); }
+function spend(costObj){ if(!canAfford(costObj)) return false; for(const [k,v] of Object.entries(costObj)){ if(k in s.res) s.res[k]-=v; else s.inv[k]-=v; } return true; }
+function reward(obj){ for(const [k,v] of Object.entries(obj)){ if(k in s.res) s.res[k]=(s.res[k]||0)+v; else s.inv[k]=(s.inv[k]||0)+v; } }
+function timeLeft(ts){ const s=Math.max(0,Math.ceil((ts-Date.now())/1000)); const m=Math.floor(s/60), ss=s%60, h=Math.floor(m/60), mm=m%60; return h?`${h}h ${mm}m`:(m?`${m}m ${ss}s`:`${ss}s`); }
+function openSheet(html){ $('sheet').innerHTML=html; $('modal').classList.add('show'); }
+function closeSheet(){ $('modal').classList.remove('show'); }
+function buildingSheet(id){
+  const d=defs.find(x=>x.id===id), lv=s.l[id]||0, locked=id!=='core' && lv>=s.l.core, isQueue=s.queue&&s.queue.id===id;
+  const upgradeCost={alloy:buildingCost(id)};
+  openSheet(`
+    <button class="close" data-act="close">Close ✕</button>
+    <h2>${d.name} · Level ${lv}</h2>
+    <div class="pill">${d.icon} ${d.desc}</div>
+    <div class="line"></div>
+    <div class="grid2">
+      <div class="card"><h3>Upgrade</h3><p>Improves this building's output and unlocks stronger progression.</p><p><b>Cost:</b> ${fmt(upgradeCost.alloy)} alloy<br><b>Time:</b> ${queueSeconds(id)}s</p>
+      <button data-act="upgrade:${id}" ${s.queue||locked||!canAfford(upgradeCost)?'disabled':''}>${lv?`Upgrade to Lv ${lv+1}`:'Construct'}</button>
+      <p class="small">${s.queue?'Shared construction queue busy.':locked?'Upgrade AI Core first.':'One construction queue like a strategy game HQ.'}</p></div>
+      <div class="card"><h3>Current Output</h3><p>${buildingOutputText(id)}</p>${specialActions(id)}</div>
+    </div>
+  `);
+ }
+ function buildingOutputText(id){
+   if(id==='farm') return `Food production +${(s.l.farm*0.72).toFixed(2)}/sec`;
+   if(id==='water') return `Water production +${(s.l.water*0.68).toFixed(2)}/sec`;
+   if(id==='reactor') return `Energy production +${(s.l.reactor*0.62).toFixed(2)}/sec`;
+   if(id==='forge') return `Alloy production +${(s.l.forge*0.58).toFixed(2)}/sec`;
+   if(id==='quarters') return `Population cap ${popCap()}`;
+   if(id==='barracks') return `Troop training unlocked. Current guards: ${s.guards}`;
+   if(id==='hangar') return `Drone deployment unlocked. Current drones: ${s.drones}`;
+   if(id==='lab') return `Research projects completed: ${s.tech}`;
+   if(id==='med') return `Injured troops: ${s.injured}`;
+   if(id==='wall') return `City defense rating +${s.l.wall*8}`;
+   if(id==='market') return `Buy items with diamonds and alliance coins.`;
+   return `Structure level ${s.l[id]||0}`;
+ }
+ function specialActions(id){
+   if(id==='barracks') return `<button data-act="train:guards" ${s.l.barracks<1||!canAfford({food:40,alloy:40})?'disabled':''}>Train 2 Guards · 40 food + 40 alloy</button><br><button data-act="heal" ${s.injured<1||s.l.med<1||!canAfford({water:25})?'disabled':''}>Heal 1 Injured · 25 water</button><br><button data-act="elite" ${s.l.barracks<2||s.training||!canAfford({food:80,alloy:80})?'disabled':''}>Train 2 Elite Guards · 80 food + 80 alloy · 25s</button><p class="small">Elite guards: ${s.elites} · ${s.training?timeLeft(s.training.end):'Training idle'}</p>`;
+   if(id==='hangar') return `<button data-act="train:drones" ${s.l.hangar<1||!canAfford({energy:90,alloy:70,parts:1})?'disabled':''}>Build 1 Drone · 90 energy + 70 alloy + 1 part</button>`;
+   if(id==='lab') return `<button data-act="research" ${s.l.lab<1||s.researchQueue||!canAfford({energy:120})?'disabled':''}>Start Research · 120 energy</button><p class="small">Research queue: ${s.researchQueue?`${s.researchQueue.name} (${timeLeft(s.researchQueue.end)})`:'Idle'}</p>`;
+   if(id==='market') return `<button data-act="buy:speed1" ${s.l.market<1||s.res.diamond<10?'disabled':''}>Buy 1m Speedup · 10 diamonds</button><br><button data-act="buy:crate" ${s.l.market<1||s.res.diamond<25?'disabled':''}>Buy Supply Crate · 25 diamonds</button>`;
+   if(id==='med') return `<button data-act="heal" ${s.injured<1||!canAfford({water:25})?'disabled':''}>Heal 1 Injured · 25 water</button>`;
+   return `<div class="small">Upgrade this structure to increase your empire power and unlock more systems.</div>`;
+ }
+function portrait(c){const colors=['#b59a69','#899ca5','#70b5aa','#80cfe4','#d9b566','#b26c63','#8da4d8'];const a=colors[c.id];return `<svg viewBox="0 0 100 110" aria-hidden="true"><defs><linearGradient id="p${c.id}" x2="0" y2="1"><stop stop-color="${a}"/><stop offset="1" stop-color="#18262d"/></linearGradient></defs><rect width="100" height="110" fill="#131c25"/><path d="M0 25L100 5M0 77L100 57" stroke="${a}" opacity=".2" stroke-width="10"/><circle cx="50" cy="43" r="32" fill="none" stroke="${a}" opacity=".5"/><path d="M8 110L15 84 36 71 64 71 85 84 92 110Z" fill="url(#p${c.id})" stroke="${a}"/><path d="M28 37L33 23 50 16 67 23 72 37 66 61 50 74 34 61Z" fill="${c.id===3?'#a1d2da':'#b69b85'}" stroke="#26333c"/><path d="M25 40L27 24 43 13 64 15 75 29 72 43 60 30 40 30Z" fill="#26363f" stroke="${a}"/><path d="M30 43L47 46 53 46 70 43 65 53 54 53 50 50 46 53 35 53Z" fill="#152a35" stroke="${a}"/><path d="M36 48H44M56 48H64" stroke="${a}" stroke-width="3"/><path d="M42 62H58" stroke="#67554d" stroke-width="2"/><path d="M27 81L42 101 50 88 58 101 73 81" fill="none" stroke="#1e2d34" stroke-width="6"/><text x="50" y="107" text-anchor="middle" font-size="9" fill="#fff">${c.id>=4?'LEGACY':'SECTOR 07'}</text></svg>`;}
+function safeName(v){return String(v).replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,20);}
+ function recruitSheet(id){
+   const c=commanders.find(x=>x.id===id), owned=s.commanders.includes(id), lv=s.cmdLv[id]||1, gear=s.cmdGear[id]||[];
+   openSheet(`
+   <button class="close" data-act="close">Close ✕</button>
+   <div class="cmd"><div class="portrait">${portrait(c)}</div><div><div class="pill">${c.rarity}</div><h2>${c.name}</h2><div class="small">${c.title}</div><div class="stars">${'★'.repeat(c.stars)}</div></div></div>
+   <div class="line"></div>
+   <p>${c.desc}</p>${id>=4?`<span class="pill">One of the Three Brothers</span>`:""}${id>=4?` <button data-act="tab:Legacy">Open Legacy</button>`:""}<p><b>Perk:</b> ${c.perk}</p>
+   <div class="grid2">
+    <div class="card"><h3>Status</h3><p>Level ${lv}<br>Gear slots used: ${gear.length}/2</p>${owned?`<button data-act="cmdlevel:${id}" ${s.inv.manuals<1?'disabled':''}>Use Training Manual · +1 level</button>`:`<button data-act="recruit:${id}" ${!canAfford({alloy:c.cost})?'disabled':''}>Recruit · ${c.cost} alloy</button>`}</div>
+    <div class="card"><h3>Equipment</h3><p>${gear.length?gear.map(g=>gearList.find(x=>x.id===g).icon+' '+gearList.find(x=>x.id===g).name).join('<br>'):'No gear equipped yet.'}</p><button data-act="gear:${id}" ${!owned?'disabled':''}>Manage Equipment</button></div>
+   </div>`);
+ }
+ function renderHeroStrip(){
+   $('heroStrip').innerHTML=commanders.map(c=>{
+     const owned=s.commanders.includes(c.id); const lv=s.cmdLv[c.id]||1;
+     return `<div class="heroBadge"><div class="small">${c.rarity}</div><div class="name">${c.emoji} ${c.name}</div><div class="small">${c.title}</div><div class="row" style="margin-top:8px"><span class="pill">Lv ${lv}</span><span class="pill">${owned?'Active':'Unrecruited'}</span></div></div>`;
+   }).join('');
+ }
+ function nextChapter(){ return chapters[s.chapter] || null; }
+ function renderTop(){
+   $('power').textContent=fmt(totalPower());
+   $('commanderLevel').textContent=s.commanderLevel;
+   $('vip').textContent=s.vip;
+   $('allianceState').textContent=s.alliance? 'Last Light' : 'None';
+   $('aiMood').textContent=aiMood();
+   const resources=[['Food','🌾','food'],['Water','💧','water'],['Energy','⚡','energy'],['Alloy','⚙️','alloy'],['Diamonds','◆','diamond']];
+   $('resources').innerHTML=resources.map(([n,ic,k])=>`<div class="res"><span>${ic} ${n}</span><b>${fmt(s.res[k])}</b></div>`).join('');
+   const ch=nextChapter();
+   $('chapterBox').innerHTML = ch ? `<div class="small">CHAPTER ${s.chapter+1} / ${chapters.length}</div><h3>${ch.name}</h3><div>${ch.text}</div><div class="row" style="margin-top:10px"><span class="pill">Reward: ${Object.entries(ch.reward).map(([k,v])=>`${v} ${k}`).join(', ')}</span><button data-act="chapter" ${!ch.done(s)?'disabled':''}>Claim Chapter Reward</button></div>` : `<h3>Campaign complete</h3><div>Your bunker is now in open-ended empire mode. Keep expanding.</div>`;
+   let alerts=[];
+   if(s.gather) alerts.push('Gathering convoy · '+timeLeft(s.gather.end));
+   if(s.training) alerts.push(`Training · ${timeLeft(s.training.end)}`);
+   if(s.queue) alerts.push(`${defs.find(d=>d.id===s.queue.id).name} upgrading · ${timeLeft(s.queue.end)}`);
+   if(s.researchQueue) alerts.push(`Research: ${s.researchQueue.name} · ${timeLeft(s.researchQueue.end)}`);
+   if(s.armies.length) alerts.push(s.armies.length+" army marches active");
+   $('notice').textContent = s.message + (alerts.length?` | ${alerts.join(' | ')}`:'');
+   renderHeroStrip();
+ }
+ let cityZoom=1, citySignature='';
+ function renderHQ(){
+ const ch=nextChapter();
+ $('chapterBox').innerHTML=ch?`<div><small>CHAPTER ${s.chapter+1} / ${chapters.length}</small><h3>${ch.name}</h3><small>${ch.text}</small></div><button data-act="${ch.done(s)?'chapter':'tab:Missions'}">${ch.done(s)?'Claim reward':'Missions →'}</button>`:'<b>Campaign complete · Expand your empire</b>';
+ const sig=JSON.stringify([s.l,s.queue?.id,Math.ceil((s.queue?.end||0)/1000),s.people,s.inv.speed1,s.inv.speed5,s.raid,s.training,s.protocol,s.commanders,s.promotions,s.cmdLv,s.inv.parts,s.res.alloy>=50,s.res.energy>=300]);
+ const existing=$('cityViewport');
+ if(existing&&citySignature===sig){const q=$('cityQueue');if(q)q.textContent=s.queue?timeLeft(s.queue.end):'Idle';const lab=$('cityTimer');if(lab)lab.textContent=s.queue?timeLeft(s.queue.end):'';return;}
+ citySignature=sig;const ox=existing?.scrollLeft||0,oy=existing?.scrollTop||0;
+ const pos=[[300,126],[120,240],[480,240],[112,362],[480,362],[300,272],[300,410],[115,490],[485,490],[115,620],[300,555],[480,620],[300,690],[300,48]];
+ const roof=(d,i)=>{let [x,y]=pos[i]||[300,740],lv=s.l[d.id]||0,busy=s.queue?.id===d.id,c=d.color||'#84918d';
+ const block=(x,y,w,h,z,col=c)=>`<g transform="translate(${x} ${y})"><path d="M${-w} ${-z}L0 ${-z-h}L${w} ${-z}L0 ${-z+h}Z" fill="${col}" stroke="#a0aaa2" stroke-width=".8"/><path d="M${-w} ${-z}L0 ${-z+h}V${h}L${-w} 0Z" fill="url(#metalL)" stroke="#182728"/><path d="M${w} ${-z}L0 ${-z+h}V${h}L${w} 0Z" fill="url(#metalR)" stroke="#182728"/><path d="M${-w+5} ${-z+6}L-5 ${-z+h+3}M5 ${-z+h+3}L${w-5} ${-z+6}" stroke="#c1bfa0" opacity=".35"/><path d="M${-w+4} ${-z+9}L-4 ${-z+h+9}V${h-4}L${-w+4} -4Z" fill="url(#ribbed)"/><path d="M${-w+8} ${-z+12}L-8 ${-z+h+12}M8 ${-z+h+12}L${w-8} ${-z+12}" stroke="#15262b" stroke-width="2" opacity=".7"/><path d="M${-w+8} ${-z+16}L-8 ${-z+h+16}M8 ${-z+h+16}L${w-8} ${-z+16}" stroke="#c7b887" stroke-width="1" opacity=".5"/></g>`;
+ const tank=(x,y,r,h,col)=>`<g transform="translate(${x} ${y})"><rect x="${-r}" y="${-h}" width="${2*r}" height="${h}" fill="url(#tankMetal)"/><ellipse cy="0" rx="${r}" ry="${r*.37}" fill="#34494b"/><rect x="${-r}" y="${-h}" width="${2*r}" height="${h-3}" fill="url(#tankMetal)"/><ellipse cy="${-h}" rx="${r}" ry="${r*.37}" fill="${col}" stroke="#aabbb5"/><path d="M${-r+3} ${-h+10}H${r-3}M${-r+3} ${-h+20}H${r-3}" stroke="#17292b" opacity=".6"/></g>`;
+ const glow=(x,y,col='#8ce8ce')=>`<circle cx="${x}" cy="${y}" r="9" fill="${col}" opacity=".17"/><circle cx="${x}" cy="${y}" r="3" fill="${col}" class="lamp"/>`;
+ let model='';const z=Math.min(lv,12)*2;
+ switch(d.id){
+ case 'core':model=block(0,0,61,30,24)+block(0,-12,37,19,55+z,'#76969e')+`<path d="M-17 -65L0 -112L17 -65L0 -45Z" fill="url(#coreCrystal)" stroke="#b5fff7" stroke-width="2"/><ellipse cy="-59" rx="24" ry="9" fill="none" stroke="#6ee4ef" stroke-width="2" class="lamp"/>`+glow(0,-80,'#79efff');break;
+ case 'reactor':model=block(0,0,60,28,13)+tank(-29,-3,20,48+z,'#a18c53')+tank(25,-5,23,57+z,'#b99a62')+`<path d="M-29 -52V-70H25V-62" fill="none" stroke="#8c9b90" stroke-width="7"/>`+glow(25,-32,'#ffd273');break;
+ case 'farm':model=block(0,0,61,29,8)+[-32,0,32].map((x,j)=>`<g transform="translate(${x} ${-8-j%2*10})"><path d="M-15 0V-27Q0 -49 15 -27V0L0 8Z" fill="#517e67" fill-opacity=".85" stroke="#b7d5ae"/><path d="M-15 -17L0 -9L15 -17M0 -35V8" fill="none" stroke="#b7d5ae"/><g fill="#9fd879"><circle cx="-7" cy="-7" r="4"/><circle cx="5" cy="-14" r="5"/></g></g>`).join('');break;
+ case 'water':model=block(0,0,60,28,10)+tank(-25,-3,24,36+z,'#5996a7')+tank(28,0,19,27,'#75b7c7')+`<path d="M-25 -38V-55H28V-28" fill="none" stroke="#95b6b6" stroke-width="6"/>`+glow(-25,-21,'#74e2ff');break;
+ case 'quarters':model=block(-20,0,38,19,37+z,'#928c75')+block(28,-7,28,15,27+z,'#a69a81')+[-1,0,1].map(k=>`<path d="M${-43+k*12} -18l8 4v8l-8 -4Z" fill="#e1bc77"/>`).join('');break;
+ case 'lab':model=block(0,0,60,28,18)+block(-20,-8,27,14,35+z,'#7d82a2')+`<ellipse cx="29" cy="-29" rx="24" ry="12" fill="#8da4a9" stroke="#d3e4df"/><path d="M29 -29L46 -51M29 -29V-12" stroke="#b6d6d5" stroke-width="4"/>`+glow(29,-29,'#a79bff');break;
+ case 'barracks':model=block(0,0,62,30,27+z,'#777d65')+`<path d="M-42 -16L-4 4V22L-42 2Z" fill="#182727" stroke="#7c8c79"/><path d="M-37 -9L-9 6M-37 -3L-9 12" stroke="#8c9b83"/><path d="M20 -49V-72l22 8-22 8" fill="#b9a466" stroke="#c1c7ad"/>`;break;
+ case 'med':model=block(0,0,58,28,31+z,'#a1b4ae')+`<path d="M-8 -60H8V-50H22V-40H8V-30H-8V-40H-22V-50H-8Z" fill="#cf6b66" stroke="#f2c0ad"/>`+glow(32,-12);break;
+ case 'forge':model=block(0,0,60,29,22+z,'#8d8068')+tank(-32,-12,9,52,'#777b72')+tank(-12,-22,7,44,'#777b72')+`<path d="M14 -7l29 -16v25L14 17Z" fill="#ca874a"/><circle cx="-32" cy="-70" r="7" fill="#a0aaa0" opacity=".35" class="steam"/>`;break;
+ case 'market':model=block(0,0,57,27,20+z,'#88728c')+[-32,0,32].map(x=>`<path d="M${x-13} -13l13 -9 13 9-13 9Z" fill="#c7a267" stroke="#efe0b0"/>`).join('');break;
+ case 'hangar':model=block(0,0,65,31,26+z,'#6f8a96')+`<path d="M-45 -8L0 16L45 -8V-29L0 -6L-45 -29Z" fill="#203438" stroke="#8dabae"/><path d="M-20 -45L0 -55L20 -45L0 -35Z M-27 -43H27" fill="#a3c2c1" stroke="#c6e5e3"/>`;break;
+ case 'turret':model=block(0,0,50,24,14)+tank(0,-8,22,23+z,'#7f8f82')+`<path d="M-9 -37L36 -55L42 -48L0 -29Z" fill="#9ba9a0" stroke="#c5d0c3"/>`;break;
+ case 'shield':model=block(0,0,48,24,16)+`<path d="M-26 -21Q0 -86 26 -21Q0 0 -26 -21Z" fill="#65a9ba" fill-opacity=".45" stroke="#9cffff" stroke-width="2"/>`+glow(0,-30,'#74e2ff');break;
+ default:model=block(0,0,60,29,25+z,'#778a8b')+[-36,-12,12,36].map(x=>block(x,-21,10,5,15,'#a6aaa0')).join('');}
+ return `<g class="building" role="button" tabindex="0" aria-label="${d.name} level ${lv}" data-act="open:${d.id}" transform="translate(${x} ${y})"><ellipse cy="15" rx="76" ry="34" fill="#000" opacity=".65" filter="url(#softShadow)"/><path class="outline" d="M-79 0L0 -42L79 0L0 42Z" fill="url(#concrete)" stroke="${busy?'#f0cb77':'#7b8980'}" stroke-width="2"/><path d="M-67 0L0 -35L67 0L0 35Z" fill="none" stroke="#a1a28a" stroke-dasharray="5 7" opacity=".5"/><g opacity="${lv?1:.42}">${model}${lv?`<path d="M-57 8L0 38L57 8" fill="none" stroke="#b5a477" stroke-width="1.2" opacity=".7"/><path d="M-48 4l12 7M-32 12l12 7M32 12l-12 7M48 4l-12 7" stroke="#d7b56c" stroke-width="2"/><circle cx="-48" cy="15" r="17" fill="url(#warmLight)"/><circle cx="48" cy="15" r="12" fill="url(#blueLight)"/>`:''}</g>${lv?glow(-48,15):''}<rect x="-74" y="32" width="148" height="25" rx="4" fill="#091316" fill-opacity=".95" stroke="#6a7d76"/><text y="48" fill="#eef2e6" font-size="13" text-anchor="middle" font-weight="bold">${d.name}</text><rect x="-27" y="58" width="54" height="19" rx="4" fill="${lv?'#375744':'#6b5129'}" stroke="#89977e"/><text y="72" text-anchor="middle" fill="#f4f0d5" font-size="12">${lv?'Lv '+lv:'BUILD'}</text>${busy?`<rect x="-35" y="-100" width="70" height="20" rx="5" fill="#5d4925"/><text id="cityTimer" y="-86" text-anchor="middle" fill="#ffe5a0" font-size="12">${timeLeft(s.queue.end)}</text>`:''}</g>`};
+ const art=`<svg viewBox="0 -85 600 895" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive isometric bunker"><defs><radialGradient id="warmLight"><stop stop-color="#ffd384" stop-opacity=".7"/><stop offset="1" stop-color="#ffd384" stop-opacity="0"/></radialGradient><radialGradient id="blueLight"><stop stop-color="#72e7ff" stop-opacity=".5"/><stop offset="1" stop-color="#72e7ff" stop-opacity="0"/></radialGradient><linearGradient id="concrete" x2="0" y2="1"><stop stop-color="#556263"/><stop offset="1" stop-color="#29373b"/></linearGradient><pattern id="roadTex" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M0 0L9 9M-3 6L3 12" stroke="#aab9b7" stroke-width=".5" opacity=".12"/></pattern><pattern id="ribbed" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 0V5" stroke="#baccc7" opacity=".19"/></pattern><filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter><radialGradient id="vignette"><stop offset=".55" stop-color="#03080c" stop-opacity="0"/><stop offset="1" stop-color="#03080c" stop-opacity=".65"/></radialGradient><linearGradient id="metalL"><stop stop-color="#637470"/><stop offset="1" stop-color="#344744"/></linearGradient><linearGradient id="metalR"><stop stop-color="#253b3d"/><stop offset="1" stop-color="#43534e"/></linearGradient><linearGradient id="tankMetal"><stop stop-color="#253b3d"/><stop offset=".35" stop-color="#92a29a"/><stop offset=".7" stop-color="#536967"/><stop offset="1" stop-color="#263c3d"/></linearGradient><linearGradient id="coreCrystal"><stop stop-color="#caffed"/><stop offset=".5" stop-color="#56c6d8"/><stop offset="1" stop-color="#285b85"/></linearGradient><pattern id="floor" width="60" height="32" patternUnits="userSpaceOnUse"><path d="M0 16L30 0L60 16L30 32Z" fill="none" stroke="#53675e" stroke-opacity=".22"/></pattern><radialGradient id="ground"><stop stop-color="#526155"/><stop offset="1" stop-color="#141f22"/></radialGradient><linearGradient id="rock" x2="0" y2="1"><stop stop-color="#374244"/><stop offset="1" stop-color="#10191b"/></linearGradient></defs><rect x="0" y="-85" width="600" height="895" fill="url(#ground)"/><path d="M0 0L90 36L22 170L46 310L15 510L48 670L0 810ZM600 0L510 36L578 170L554 310L585 510L552 670L600 810Z" fill="url(#rock)" stroke="#65716a" stroke-width="3"/><path d="M-18 -73l47 -14 47 7 -24 14Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-44 -55l21 -32 21 16 -11 32Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-51 -40l37 -14 37 7 -19 14Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-56 -12l40 -21 40 10 -20 21Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-7 11l32 -26 32 13 -16 26Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M6 18l19 -12 19 6 -10 12Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-30 49l29 -29 29 14 -15 29Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-34 74l38 -26 38 13 -19 26Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-21 84l44 -32 44 16 -22 32Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-66 105l41 -26 41 13 -21 26Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-6 136l20 -33 20 16 -10 33Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-33 158l45 -16 45 8 -23 16Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-33 172l24 -22 24 11 -12 22Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-63 190l44 -30 44 15 -22 30Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-56 211l47 -20 47 10 -24 20Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-22 240l28 -30 28 15 -14 30Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-27 255l37 -31 37 15 -19 31Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-44 285l46 -32 46 16 -23 32Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-69 293l47 -15 47 7 -24 15Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-70 316l48 -20 48 10 -24 20Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-35 334l43 -33 43 16 -22 33Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-13 366l27 -30 27 15 -14 30Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-57 386l36 -24 36 12 -18 24Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-47 407l32 -14 32 7 -16 14Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-43 419l50 -34 50 17 -25 34Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-71 445l49 -25 49 12 -25 25Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-21 459l33 -31 33 15 -17 31Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-8 492l24 -14 24 7 -12 14Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-26 509l31 -28 31 14 -16 28Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-26 528l46 -25 46 12 -23 25Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-36 545l32 -23 32 11 -16 23Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-29 577l41 -12 41 6 -21 12Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-29 600l41 -30 41 15 -21 30Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-31 618l36 -26 36 13 -18 26Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-14 637l27 -21 27 10 -14 21Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-9 655l26 -16 26 8 -13 16Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-54 679l44 -25 44 12 -22 25Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-50 691l38 -20 38 10 -19 20Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M-10 715l19 -35 19 17 -10 35Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M-51 737l36 -14 36 7 -18 14Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M-33 757l36 -28 36 14 -18 28Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-16 778l30 -22 30 11 -15 22Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-53 808l38 -13 38 6 -19 13Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M-11 815l28 -12 28 6 -14 12Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M543 -87l42 -21 42 10 -21 21Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M528 -52l42 -30 42 15 -21 30Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M540 -38l29 -18 29 9 -15 18Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M556 -17l20 -28 20 14 -10 28Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M558 10l41 -20 41 10 -21 20Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M555 28l21 -30 21 15 -11 30Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M551 46l32 -31 32 15 -16 31Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M548 67l39 -18 39 9 -20 18Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M551 92l18 -18 18 9 -9 18Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M535 104l46 -35 46 17 -23 35Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M545 123l50 -18 50 9 -25 18Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M543 159l33 -28 33 14 -17 28Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M546 180l25 -15 25 7 -13 15Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M551 188l30 -28 30 14 -15 28Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M549 221l23 -34 23 17 -12 34Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M561 237l36 -30 36 15 -18 30Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M584 261l37 -12 37 6 -19 12Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M532 277l38 -26 38 13 -19 26Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M533 297l49 -14 49 7 -25 14Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M553 318l33 -26 33 13 -17 26Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M577 348l43 -29 43 14 -22 29Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M600 360l23 -19 23 9 -12 19Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M557 375l36 -30 36 15 -18 30Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M545 410l25 -12 25 6 -13 12Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M519 432l50 -18 50 9 -25 18Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M544 439l49 -19 49 9 -25 19Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M597 466l22 -26 22 13 -11 26Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M543 487l50 -14 50 7 -25 14Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M565 516l37 -22 37 11 -19 22Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M549 537l31 -15 31 7 -16 15Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M581 558l25 -12 25 6 -13 12Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M558 571l37 -29 37 14 -19 29Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M534 592l38 -31 38 15 -19 31Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M541 616l37 -18 37 9 -19 18Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M532 639l48 -20 48 10 -24 20Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M574 659l23 -31 23 15 -12 31Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M526 677l42 -29 42 14 -21 29Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M549 697l30 -35 30 17 -15 35Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M588 725l25 -27 25 13 -13 27Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M562 734l39 -15 39 7 -20 15Z" fill="#202b30" stroke="#111c20" stroke-width="1.2"/><path d="M530 763l49 -25 49 12 -25 25Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M552 776l43 -17 43 8 -22 17Z" fill="#4a4d46" stroke="#111c20" stroke-width="1.2"/><path d="M535 800l49 -19 49 9 -25 19Z" fill="#3b4547" stroke="#111c20" stroke-width="1.2"/><path d="M578 824l26 -15 26 7 -13 15Z" fill="#283139" stroke="#111c20" stroke-width="1.2"/><path d="M45 24H555V767H45Z" fill="url(#floor)"/><path d="M300 30V750M120 225H480M120 350H480M120 480H480M120 610H480" stroke="#111e23" stroke-width="32" fill="none"/><path d="M300 30V750M120 225H480M120 350H480M120 480H480M120 610H480" stroke="#556165" stroke-width="27" fill="none"/><path d="M300 30V750M120 225H480M120 350H480M120 480H480M120 610H480" stroke="url(#roadTex)" stroke-width="25" fill="none"/><g transform="translate(58 150)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(58 290)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(58 425)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(58 560)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(58 700)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(208 150)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(208 290)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(208 425)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(208 560)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(208 700)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(392 150)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(392 290)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(392 425)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(392 560)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(392 700)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(542 150)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(542 290)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(542 425)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(542 560)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g transform="translate(542 700)"><ellipse cy="5" rx="15" ry="7" fill="#080f13" opacity=".6"/><path d="M-10 0L0 -6L10 0L0 6Z" fill="#626e70"/><path d="M-10 0V10L0 16V6Z" fill="#34474c"/><path d="M10 0V10L0 16V6Z" fill="#24373b"/><path d="M0 -6V-22" stroke="#647d80" stroke-width="2"/><circle cy="-22" r="3" fill="#ffe2a4"/><circle cy="-22" r="12" fill="url(#warmLight)"/></g><g stroke="#84938a" stroke-opacity=".45" stroke-width="20" fill="none"><path d="M300 30V750M120 225H480M120 350H480M120 480H480M120 610H480"/></g><g stroke="#d2b86c" stroke-dasharray="9 13" stroke-width="2" opacity=".7"><path d="M300 20V760M120 225H480M120 350H480M120 480H480M120 610H480"/></g><g fill="#b6e39b"><circle class="worker" cx="210" cy="320" r="4"/><circle class="worker" cx="350" cy="450" r="4" style="animation-delay:-2s"/><circle class="worker" cx="210" cy="580" r="4" style="animation-delay:-3s"/></g>${defs.map((d,i)=>({d,i})).sort((a,b)=>(pos[a.i]?.[1]||740)-(pos[b.i]?.[1]||740)).map(({d,i})=>roof(d,i)).join('')}<rect x="0" y="-85" width="600" height="895" fill="url(#vignette)" pointer-events="none"/><text x="300" y="790" text-anchor="middle" fill="#9cae9d" font-size="12" letter-spacing="4">SECTOR 07 · UNDERGROUND CITY</text></svg>`;
+ $('view').innerHTML=`<div class="panel"><div class="head"><b>SECTOR 07 · Headquarters</b><small>Population ${s.people}/${popCap()}</small></div><div class="cityTools"><small>Tap a building · scroll to explore</small><button data-act="zoom:out">−</button><button data-act="zoom:in">+</button><button data-act="zoom:reset">Fit</button></div><div class="cityViewport" id="cityViewport"><div class="cityCanvas" style="width:${cityZoom*100}%">${art}</div></div><div class="body"><div class="row"><span class="pill">Construction: <b id="cityQueue">${s.queue?timeLeft(s.queue.end):'Idle'}</b></span><button data-act="speed:1" ${!s.queue||!s.inv.speed1?'disabled':''}>Speedup (${s.inv.speed1})</button><button data-act="event:knock" ${s.flags.knock?'disabled':''}>The Knock</button></div></div></div>`;const vp=$('cityViewport');vp.scrollLeft=ox;vp.scrollTop=oy;
+ }
+ function renderWorldOld(){
+   $('view').innerHTML=`<div class="panel"><div class="head"><div><b>Wasteland Operations</b><div class="small">Send marches to conquer sectors and bring supplies home</div></div><div class="pill">Army Power ${armyPower()}</div></div><div class="body"><div class="list">${sites.map(site=>{
+     const owned=s.territory.includes(site.id); const inMarch=s.march&&s.march.site===site.id;
+     const rewards=Object.entries(site.reward).map(([k,v])=>`${v} ${k}`).join(', ');
+     return `<div class="site"><div class="row" style="align-items:center;flex-wrap:nowrap"><div class="icon">${site.icon}</div><div><b>${site.name}</b><div class="small">Required power ${site.req} · Rewards: ${rewards}</div></div></div><div class="row"><span class="pill">${owned?'Secured':site.type}</span><button data-act="march:${site.id}" ${owned||inMarch||s.march||armyPower()<site.req?'disabled':''}>${inMarch?'Marching':owned?'Controlled':`Deploy · ${site.time}s`}</button></div></div>`;
+   }).join('')}</div></div></div>`;
+ }
+ function renderWorld(){
+ const coords=[[12,83],[31,83],[51,83],[72,83],[12,61],[31,61],[51,61],[72,61],[12,39],[31,39],[51,39],[72,39],[12,17],[31,17],[51,17],[72,17]];
+ const marks=sites.map((site,i)=>{let [x,y]=coords[i],owned=s.territory.includes(i),moving=busySite(i);return `<button class="mapnode ${owned?'owned':''} ${moving?'marching':''}" style="left:${x}%;top:${y}%" data-act="inspect:${i}"><span>${site.icon}</span><b>${site.name}</b><small>${owned?'CONTROLLED':'Lv '+(i+1)}</small></button>`}).join('');
+ const destination=null;
+ $('view').innerHTML=`<div class="panel"><div class="head"><div><b>Dark Frontier · Northern Wastes</b><div class="small">Tap a location to scout or deploy</div></div><span class="pill">Army ${armyPower()}</span></div><div class="worldscroll"><div class="worldmap"><svg viewBox="0 0 800 620" preserveAspectRatio="none"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#d7d7ac" opacity=".12"/></pattern></defs><rect width="800" height="620" fill="url(#grid)"/><path d="M0 280Q190 90 400 310T800 240 M0 490Q290 310 450 460T800 400 M160 0L300 620 M660 0L480 620" stroke="#81917c" stroke-width="13" fill="none" opacity=".22"/>${s.armies.map(m=>{const d=coords[m.site];if(!d)return '';const progress=Math.max(0,Math.min(1,(Date.now()-m.start)/(m.end-m.start||1)));return `<path d="M400 570L${d[0]*8} ${d[1]*6.2}" stroke="#f4cf75" stroke-width="4" stroke-dasharray="9 8" class="route"/><circle cx="${400+(d[0]*8-400)*progress}" cy="${570+(d[1]*6.2-570)*progress}" r="9" fill="#ffe092"/>`}).join('')}</svg>${marks}<div class="homebase">◈ BUNKER 07</div></div></div><div class="body"><div class="row"><span class="pill">Territories ${s.territory.length}/${sites.length}</span><span class="pill">${s.armies.length}/${slots()} armies deployed</span><button data-act="reports">Battle reports (${s.reports.length})</button></div></div></div>`;
+ }
+ function renderArmyPanel(){ $('view').insertAdjacentHTML('beforeend',`<div class="panel"><div class="head"><b>WAR ROOM · TOTAL WAR</b><span class="pill">${s.armies.length}/${slots()} marches</span></div><div class="body"><p>Available troop power: ${freePower()}</p>${s.armies.map(m=>`<div class="card"><b>${sites[m.site].name} · ${m.formation}</b><p>Attack ${m.power} · ${timeLeft(m.end)}</p><div class="progress"><i style="width:${Math.max(0,Math.min(100,100*(Date.now()-m.start)/(m.end-m.start||1)))}%"></i></div></div>`).join('')||'<p>No armies deployed. Tap a territory to plan an attack.</p>'}</div></div>`);}
+ function renderGather(){ renderArmyPanel(); $('view').insertAdjacentHTML('beforeend',`<div class="panel"><div class="head"><b>Resource expeditions</b><span class="pill">${s.gather?timeLeft(s.gather.end):'Convoy ready'}</span></div><div class="body"><p class="small">Send a separate civilian convoy to gather supplies. Repeatable, even while your army is marching. Requires 4 guards.</p><div class="row">${['food','water','energy','alloy'].map(k=>`<button data-act="gather:${k}" ${s.gather||s.guards<4?'disabled':''}>${k} · 45s</button>`).join('')}</div><p class="small">Completed convoys: ${s.gathered}</p></div></div>`); }
+ function inspectSite(i){const site=sites[i],owned=s.territory.includes(i);const leaders=availableLeaders();openSheet(`<button class="close" data-act="close">Close ✕</button><h2>${site.icon} ${site.name}</h2><p>Enemy power ${site.req} · Available troop power ${freePower()}</p><p>Loot: ${Object.entries(site.reward).map(([k,v])=>v+' '+k).join(', ')}</p><button data-act="scout:${i}" ${owned||s.scouted.includes(i)?'disabled':''}>${s.scouted.includes(i)?'Scouted':'Scout · 10 energy'}</button><div class="card"><h3>Deploy army</h3><p>Slots ${s.armies.length}/${slots()} · Core Lv 3 and 6 unlock extra armies.</p><label>Troop power allocation <input id="alloc" type="range" min="1" max="${Math.max(1,freePower())}" value="${Math.max(1,freePower())}" oninput="document.getElementById('allocation').textContent=this.value"></label> <b id="allocation">${Math.max(1,freePower())}</b><p><label>Commander <select id="leader"><option value="none">No commander</option>${leaders.map(id=>`<option value="${id}">${commanders[id].name}</option>`).join('')}${[4,5,6].every(id=>leaders.includes(id))?'<option value="family">Three brothers (+12)</option>':''}</select></label></p><label>Formation <select id="formation"><option value="assault">Assault · +15% power</option><option value="shield">Shield wall · fewer injuries</option><option value="recon">Recon · +5% power, faster travel</option></select></label><p>Insufficient attack power can result in defeat.</p><button data-act="deploy:${i}" ${owned||busySite(i)||s.armies.length>=slots()||freePower()<1?'disabled':''}>${owned?'Controlled':'Deploy army'}</button></div>`);}
+ function resolveArmy(m){const site=sites[m.site];if(!site||s.territory.includes(m.site))return;const win=m.power>=site.req;const injured=m.formation==='shield wall'?0:Math.min(Math.max(0,s.guards-s.injured),win&&m.power>=site.req*1.5?0:Math.ceil(site.req/40));s.injured+=injured;if(win){s.territory.push(m.site);reward(site.reward);if((m.leaders||[]).includes(1))s.res.alloy+=Math.round((site.reward.alloy||0)*.15);s.campaignWins++;}s.reports.push({name:site.name+' · '+m.formation,power:m.power,enemy:site.req,win,injured});s.reports=s.reports.slice(-30);s.message=win?site.name+' captured!':'Army returned after defeat.';}
+ function reportSheet(){openSheet(`<button class="close" data-act="close">Close ✕</button><h2>Combat intelligence</h2>${s.reports.length?s.reports.slice().reverse().map(r=>`<div class="card"><h3>${r.name} · ${r.win?'Victory':'Defeat'}</h3><p>Attack ${r.power} / Defense ${r.enemy}<br>Injured: ${r.injured}<br>${r.win?'Sector secured.':'Forces returned.'}</p></div>`).join(''):'<p>No battle reports yet.</p>'}`)}
+ function renderCommanders(){
+   $('view').innerHTML=`<div class="panel"><div class="head"><div><b>Command Center</b><div class="small">Recruit, level and equip specialists</div></div><div class="pill">Owned ${s.commanders.length}/${commanders.length}</div></div><div class="body list">${commanders.map(c=>{
+     const owned=s.commanders.includes(c.id), lv=s.cmdLv[c.id]||1;
+     return `<div class="card"><div class="cmd"><div class="portrait">${portrait(c)}</div><div><div class="row"><span class="pill">${c.rarity}</span><span class="pill">Lv ${lv}</span>${c.id>=4?'<span class="pill">Family</span>':''}</div><h3>${c.name}</h3><div class="small">${c.title} · ${c.perk}</div><div class="stars">${'★'.repeat(c.stars)}</div></div></div><p>${c.desc}</p><div class="row"><button data-act="cmd:${c.id}">${owned?'Manage':'View'}</button>${owned?`<button data-act="cmdlevel:${c.id}" ${s.inv.manuals<1?'disabled':''}>Use Manual (${s.inv.manuals})</button>`:`<button data-act="recruit:${c.id}" ${s.res.alloy<c.cost?'disabled':''}>Recruit · ${c.cost} alloy</button>`}${c.id>=4?`<button data-act="tab:Legacy">Legacy</button>`:''}</div></div>`;
+   }).join('')}</div></div>`;
+ }
+ function renderMissions(){
+   const dailies=currentDaily();
+   $('view').innerHTML=`<div class="grid2" style="margin:10px"><div class="panel"><div class="head"><b>Daily Missions</b><span class="pill">Resets daily</span></div><div class="body list">${dailies.map(m=>`<div class="card"><h3>${m.name}</h3><p>Reward: ${Object.entries(m.reward).map(([k,v])=>`${v} ${k}`).join(', ')}</p><button data-act="daily:${m.id}" ${s.dailyClaimed.includes(m.id)||!m.done()?'disabled':''}>${s.dailyClaimed.includes(m.id)?'Claimed':'Claim'}</button></div>`).join('')}</div></div><div class="panel"><div class="head"><b>Alliance & Events</b><span class="pill">Social systems</span></div><div class="body"><div class="card"><h3>Alliance</h3><p>${s.alliance?'You are in Last Light. Donate alloy to grow alliance power and earn alliance coins.':'Join the Last Light alliance to unlock social progression.'}</p><div class="row"><button data-act="alliance" ${s.alliance?'disabled':''}>Join Alliance</button><button data-act="donate" ${!s.alliance||s.res.alloy<50?'disabled':''}>Donate 50 Alloy</button></div><p class="small">Alliance coins: ${s.allianceCoins} · Donations: ${s.donations}</p></div><div class="card"><h3>Moral Events</h3><p>These keep our identity different from Mafia. Your choices steer the AI.</p><div class="row"><button data-act="event:knock" ${s.flags.knock?'disabled':''}>The Knock</button><button data-act="event:refugees" ${!s.flags.knock||s.flags.refugees?'disabled':''}>The Refugees</button></div></div></div></div></div>`;
+ }
+ function renderInventory(){
+   $('view').innerHTML=`<div class="panel"><div class="head"><div><b>Inventory & Speedups</b><div class="small">The mobile strategy loop needs usable items</div></div><div class="pill">Diamonds ${fmt(s.res.diamond)}</div></div><div class="body"><div class="inventory">${[
+     ['⏱️','1m Speedups',s.inv.speed1,'Use to reduce build timers by 60s','speed:1'],
+     ['⏲️','5m Speedups',s.inv.speed5,'Use to reduce build timers by 300s','speed:5'],
+     ['📘','Training Manuals',s.inv.manuals,'Level up commanders','noop'],
+     ['🧰','Parts',s.inv.parts,'Used for drones and gear','noop'],
+     ['🩹','Medkits',s.inv.medkits,'Emergency healing resources','noop'],
+     ['🎁','Supply Crates',s.inv.crates,'Open for random rewards','crate']
+   ].map(([ic,name,count,desc,act])=>`<div class="item"><div class="icon">${ic}</div><h3>${name}</h3><p>${desc}</p><div class="row"><span class="pill">Owned ${count}</span>${act==='noop'?'':`<button data-act="${act}" ${count<1||((act==='speed:1'||act==='speed:5')&&!s.queue)?'disabled':''}>Use</button>`}</div></div>`).join('')}</div></div></div>`;
+ }
+ function renderAI(){
+   $('view').innerHTML=`<div class="grid2" style="margin:10px"><div class="panel"><div class="head"><b>AI Alignment</b><span class="pill">${aiMood()}</span></div><div class="body"><div class="card"><h3>Neural Personality</h3><button data-act="eva">EVA transmission 021</button><p>Trust: ${s.trust}%</p><div class="progress"><i style="width:${s.trust}%"></i></div><p>Morality score: ${s.moral}<br>Population: ${s.people}/${popCap()}<br>Troops: ${s.guards} guards, ${s.drones} drones, ${s.injured} injured</p></div><div class="card"><h3>Strategic Summary</h3><p>Total power ${fmt(totalPower())}<br>Controlled sites ${s.territory.length}/${sites.length}<br>Research completed ${s.tech}</p></div></div></div><div class="panel"><div class="head"><b>Recommendations</b><span class="pill">Adviser</span></div><div class="body"><div class="card"><h3>What to do next</h3><p>${adviceText()}</p><div class="row"><button data-act="open:core">AI Core</button><button data-act="tab:World">World</button><button data-act="tab:Missions">Missions</button></div></div></div></div></div>`;
+ }
+ function adviceText(){
+   if(!s.flags.knock) return 'Resolve The Knock to set your AI on its path.';
+   if(s.l.core<2) return 'Upgrade the AI Core so the bunker can grow past its early cap.';
+   if(s.l.barracks<1) return 'Construct the Barracks to begin training troops.';
+   if(s.guards<4) return 'Train more guards so you can start capturing map sectors.';
+   if(s.commanders.length<1) return 'Recruit Mara or Silas to gain major empire bonuses.';
+   if(s.territory.length<1) return 'Deploy your first march to the Supply Depot.';
+   return 'Keep pushing chapters, collect dailies, and expand into more sectors.';
+ }
+ function render(){
+   const scrolls=[...document.querySelectorAll(".hqWrap,.worldscroll,.heroStrip")].map(e=>[e.className,e.scrollLeft]); tick(); renderTop();
+   $('tabs').innerHTML=['HQ','World','Commanders','Legacy','Missions','Inventory','AI','Frontier'].map(t=>`<button class="tabbtn ${tab===t?'active':''}" data-act="tab:${t}">${({HQ:'🏙️',World:'🗺️',Commanders:'🧑‍✈️',Missions:'🎯',Inventory:'🎒',AI:'◈',Frontier:'⬡',Legacy:'♜'})[t]}<br>${t}</button>`).join('');
+   document.body.classList.toggle('citymode',tab==='HQ'); if(tab==='HQ') renderHQ();
+   if(tab==='World'){renderWorld();renderGather();$('view').insertAdjacentHTML('afterbegin','<div class="panel"><div class="body"><button data-act="tab:Surface">☀ Explore surface districts &amp; Exchange</button></div></div>');}
+   if(tab==='Commanders') renderCommanders();
+   if(tab==='Legacy') renderLegacy();
+   if(tab==='Missions'){renderMissions();renderEmpire();}
+   if(tab==='Inventory') renderInventory();
+   if(tab==='Surface') renderSurface(); if(tab==='Frontier') renderFrontier(); if(tab==='AI') renderAI(); if(tab==='AI'||(tab==='HQ'&&!$('view').querySelector('.warMarker'))) {renderWarPanel(); $('view').lastElementChild.classList.add('warMarker');}
+   scrolls.forEach(([c,x])=>{const el=document.querySelector('.'+c);if(el)el.scrollLeft=x;});
+   $('footer').textContent=`AFTERLIGHT: DOMINION V1.6 · ${storage?'Local save active':'Storage blocked; session only'} · Built mobile-first for GitHub Pages.`;
+ }
+ function renderWarPanel(){const raid=s.raid; $('view').insertAdjacentHTML('beforeend',`<div class="panel"><div class="head"><b>RISE OF THE MACHINES</b><span class="pill">Defense ${defense()}</span></div><div class="body list"><div class="card"><h3>Enemy signal</h3><p>${raid?raid.name+' incoming · strength '+raid.power+' · '+timeLeft(raid.end):'Intercept a hostile faction signal to challenge an enemy raid. No raids occur until you activate this.'}</p><button data-act="raid" ${raid||Date.now()<s.raidCooldown||s.l.core<2?'disabled':''}>${raid?'Raid incoming':Date.now()<s.raidCooldown?'Signal cooldown':'Intercept signal · Core Lv 2'}</button><p>Raids repelled: ${s.raidWins}</p><button data-act="reports">Battle reports</button></div><div class="card"><h3>Military academy</h3><p>T1 Guards ${s.guards} · T2 Elites ${s.elites} · T3 Drones ${s.drones} · T4 Cyber infantry ${s.cyber} · T5 Sentinels ${s.sentinels}</p><p>${s.training?'Training: '+timeLeft(s.training.end):'Training queue idle'}</p><button data-act="advanced:cyber" ${s.l.barracks<3||s.training||!canAfford({food:150,alloy:160})?'disabled':''}>Train cyber infantry · Barracks 3 · 150 food / 160 alloy</button><button data-act="advanced:sentinels" ${s.l.hangar<4||s.training||!canAfford({energy:240,alloy:220,parts:1})?'disabled':''}>Build sentinel · Hangar 4 · 240 energy / 220 alloy / 1 part</button></div><div class="card"><h3>Neural doctrine</h3><p>${s.protocol?'Active: '+s.protocol:'Choose a permanent doctrine based on your AI alignment. Requires Lab 2 and 300 energy.'}</p><button data-act="protocol:guardian" ${s.protocol||s.moral<=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Guardian · +25 defense</button><button data-act="protocol:dominion" ${s.protocol||s.moral>=0||s.l.lab<2||s.res.energy<300?'disabled':''}>Dominion · +20 army power</button><button data-act="protocol:observer" ${s.protocol||s.moral!==0||s.l.lab<2||s.res.energy<300?'disabled':''}>Observer · +0.3 alloy/sec</button></div><div class="card"><h3>Commander promotions</h3>${s.commanders.map(i=>`<p>${commanders[i].name} · Rank ${s.promotions[i]||0} <button data-act="promote:${i}" ${(s.cmdLv[i]||1)<3||s.inv.parts<2?'disabled':''}>Promote · 2 parts · Lv 3</button></p>`).join('')||'Recruit a commander first.'}</div></div></div>`);}
+ function renderFrontier(){
+ const names=['Engineering','Recon tactics','Field medicine','Neural warfare','Bulwark','Pathfinding','Innovation'];
+ $('view').innerHTML=`<div class="panel"><div class="head"><b>THE DARK FRONTIER</b><span class="pill">Chapter II</span></div><div class="body list"><div class="frontierHero"><small>TRANSMISSION 017 // EVA</small><h2>Something is awake beneath the ice.</h2><p>A buried intelligence offers access to its archives. Its intentions are unknown.</p></div><div class="card"><h3>The buried intelligence</h3><p>${s.frontierChoice?'Decision recorded: '+s.frontierChoice:'Requires AI Core level 3. Choose whether to share knowledge or isolate the signal.'}</p><button data-act="frontchoice:cooperate" ${s.frontierChoice||s.l.core<3?'disabled':''}>Cooperate · +1 morality, +10 trust</button> <button data-act="frontchoice:isolate" ${s.frontierChoice||s.l.core<3?'disabled':''}>Isolate · −1 morality, 100 energy</button></div><div class="card"><h3>Commander skill trees</h3><p>Each rank adds 4 army power. Mara also reduces construction time by 6% per rank. Max rank 5.</p>${commanders.map((c,i)=>`<div class="skillline"><b>${c.name} · ${names[i]}</b><div class="stars">${'◆'.repeat(s.skills[i]||0)}${'◇'.repeat(5-(s.skills[i]||0))}</div><button data-act="skill:${i}" ${!s.commanders.includes(i)||(s.cmdLv[i]||1)<2||(s.skills[i]||0)>=5||s.inv.manuals<1?'disabled':''}>Train skill · 1 manual · Commander Lv 2</button></div>`).join('')}</div><div class="card"><h3>Frontier forge</h3><p>Workshop Lv 2. Craft equipment directly into a recruited commander's empty slot. Each item grants +1 army power.</p>${s.commanders.map(i=>`<div class="skillline"><b>${commanders[i].name}</b> · ${(s.cmdGear[i]||[]).length}/2 slots<br>${gearList.map(g=>`<button data-act="craft:${i}:${g.id}" ${s.l.forge<2||(s.cmdGear[i]||[]).length>=2||(s.cmdGear[i]||[]).includes(g.id)||!canAfford({parts:g.cost,alloy:100})?'disabled':''}>${g.icon} ${g.name} · ${g.cost} parts + 100 alloy</button>`).join(' ')}</div>`).join('')||'Recruit a commander first.'}</div></div></div>`;
+ }
+ 
+function renderLegacy(){
+ $('view').innerHTML=`<div class="panel"><div class="head"><div><b>BROTHERS OF AFTERLIGHT</b><div class="small">A family chapter built around Dustin Jr., Logan, and Damien</div></div><span class="pill">Bond ${s.brotherBonded?'Awakened':'Dormant'}</span></div><div class="body list"><div class="card"><h3>Legacy Chapter</h3><p>Three brothers now stand with the last city. Each one can develop a signature ability, and together they unlock a bond that strengthens the entire civilization.</p><p>${s.legacyOath?`Oath chosen: <b>${s.legacyOath}</b>.`:"Choose the oath that defines their legacy. This can only be done once."}</p><div class="row"><button data-act="awaken:protect" ${s.legacyOath?'disabled':''}>Guard the city · +10 trust</button><button data-act="awaken:explore" ${s.legacyOath?'disabled':''}>Claim the frontier · +300 alloy</button><button data-act="awaken:invent" ${s.legacyOath?'disabled':''}>Power the future · +250 energy</button></div></div>${[4,5,6].map(id=>{const c=commanders.find(x=>x.id===id);const rank=s.brotherRanks[id]||0;const owned=s.commanders.includes(id);const bonus=id===4?'+8 defense / rank':id===5?'+6 army power / rank':'+0.25 energy/sec / rank';const label=id===4?'Bulwark Protocol':id===5?'Frontier Instinct':id===6?'Overclock Genius':'Signature';return `<div class="card"><div class="cmd"><div class="portrait">${portrait(c)}</div><div><h3>${c.name}</h3><div class="small">${c.title}</div><div class="stars">${'◆'.repeat(rank)}${'◇'.repeat(3-rank)}</div></div></div><p><b>${label}</b> — ${bonus}</p><p>${id===4?'Turns the bunker into a fortress.':id===5?'Pushes farther into the wasteland and returns stronger.':'Feeds power back into the city and its machines.'}</p><div class="row"><button data-act="brother:${id}" ${!owned||rank>=3||s.inv.manuals<1?'disabled':''}>Train Signature · 1 manual</button><button data-act="cmd:${id}">${owned?'Open Commander':'View Commander'}</button></div></div>`;}).join('')}<div class="card"><h3>Brotherhood Bond</h3><p>${s.brotherBonded?'The bond is active: +15 defense and +15 army power.':'Recruit all three brothers and train at least one signature rank on each to activate the bond.'}</p><button data-act="bond" ${s.brotherBonded||![4,5,6].every(id=>s.commanders.includes(id))||![4,5,6].every(id=>(s.brotherRanks[id]||0)>=1)?'disabled':''}>Activate Brothers of Afterlight</button></div></div></div>`;
+}
+
+function resolveMarchOld(){
+   const site=sites.find(x=>x.id===s.march.site); if(!site) return;
+   s.territory.push(site.id);
+   reward(site.reward);
+   if(s.commanders.includes(1)) s.res.alloy += 40;
+   if(site.id===5){ s.injured += 1; s.message=`${site.name} secured, but your forces took casualties.`; }
+   else s.message = `${site.name} secured. Supplies recovered.`;
+ }
+ function resolveMarch(){const site=sites[s.march.site];if(!site||s.territory.includes(site.id))return;const power=s.march.power??armyPower();const win=power>=site.req;let injured=win&&power<site.req*1.5?Math.min(Math.max(0,s.guards-s.injured),Math.ceil(site.req/30)):0;s.injured+=injured;if(win){s.territory.push(site.id);reward(site.reward);if(s.commanders.includes(1))s.res.alloy+=Math.round((site.reward.alloy||0)*.15);s.campaignWins++;}s.reports.push({name:site.name,power,enemy:site.req,win,injured});s.reports=s.reports.slice(-30);s.message=win?site.name+' secured. Battle report available.':'March defeated. Forces returned.';}
+ function handleChoice(type,choice){
+   if(type==='knock' && !s.flags.knock){
+     const map={aid:{cost:{food:40},trust:20,moral:1,people:4,msg:'You opened the door. The AI logged compassion.'},limit:{cost:{food:20},trust:6,moral:0,people:2,msg:'You admitted only the safe survivors after disarming the group.'},deny:{cost:{},trust:-18,moral:-1,people:0,msg:'You sealed the blast door and chose survival over compassion.'}};
+     const r=map[choice];
+     if(!spend(r.cost)){ s.message='Not enough food.'; return; }
+     s.trust=Math.max(0,Math.min(100,s.trust+r.trust)); s.moral+=r.moral; s.people=Math.min(popCap(), s.people+r.people); s.popIdle=s.people; s.flags.knock=true; s.message=r.msg; closeSheet();
+   }
+   if(type==='refugees' && !s.flags.refugees){
+     const map={aid:{cost:{water:30,food:30},trust:15,moral:1,people:3,msg:'You saved the refugee convoy. The bunker now shelters more lives.'},limit:{cost:{food:15},trust:4,moral:0,people:1,msg:'You offered a ration drop but kept the bunker sealed.'},deny:{cost:{},trust:-12,moral:-1,people:0,msg:'You turned away the refugees to conserve supplies.'}};
+     const r=map[choice];
+     if(!spend(r.cost)){ s.message='Not enough supplies.'; return; }
+     s.trust=Math.max(0,Math.min(100,s.trust+r.trust)); s.moral+=r.moral; s.people=Math.min(popCap(), s.people+r.people); s.popIdle=s.people; s.flags.refugees=true; s.message=r.msg; closeSheet();
+   }
+ }
+ function eventSheet(which){
+   if(which==='knock') openSheet(`<button class="close" data-act="close">Close ✕</button><h2>The Knock</h2><p>Six starving strangers stand outside your blast door. One child is injured. Two adults are armed.</p><div class="row"><button data-act="choice:knock:aid">Offer shelter to all · 40 food</button><button data-act="choice:knock:limit">Disarm and admit a few · 20 food</button><button data-act="choice:knock:deny">Lock the bunker down</button></div>`);
+   if(which==='refugees') openSheet(`<button class="close" data-act="close">Close ✕</button><h2>The Refugees</h2><p>A weak refugee convoy requests medicine and water. EVA predicts a 62% chance they become valuable citizens if helped.</p><div class="row"><button data-act="choice:refugees:aid">Rescue them · 30 food + 30 water</button><button data-act="choice:refugees:limit">Drop rations only · 15 food</button><button data-act="choice:refugees:deny">Refuse the request</button></div>`);
+ }
+ function openCrate(){
+   if(s.inv.crates<1) return; s.inv.crates -=1;
+   const pool=[{alloy:100},{food:120,water:120},{diamond:20},{manuals:1},{parts:1,speed1:2}];
+   const prize=pool[Math.floor(Math.random()*pool.length)]; reward(prize); s.message=`Supply crate opened: ${Object.entries(prize).map(([k,v])=>`${v} ${k}`).join(', ')}.`;
+ }
+ function manageGear(cmdId){
+   const owned = s.cmdGear[cmdId] || [];
+   openSheet(`<button class="close" data-act="close">Close ✕</button><h2>Commander Gear</h2><p>Choose one basic item to equip. Costs parts. Max 2 gear pieces per commander.</p><div class="list">${gearList.map(g=>`<div class="card"><div class="row"><div><b>${g.icon} ${g.name}</b><div class="small">${g.bonus}</div></div><button data-act="equip:${cmdId}:${g.id}" ${owned.includes(g.id)||owned.length>=2||s.inv.parts<g.cost?'disabled':''}>Equip · ${g.cost} part</button></div></div>`).join('')}</div>`);
+ }
+ document.addEventListener('click',e=>{
+   const b=e.target.closest('[data-act]'); if(!b||b.disabled) return; tick();
+   const parts=b.dataset.act.split(':');
+   const act=parts[0];
+   if(act==='district') districtSheet(Number(parts[1]));
+   if(act==='districtbuild'){const i=Number(parts[1]),d=districts[i],l=s.surface[i]||0;if(d&&!s.surfaceQueue&&s.l.core>=d.core&&l<s.l.core&&spend({alloy:Math.ceil(d.cost*1.65**l)})){s.surfaceQueue={id:i,end:Date.now()+(30+l*15)*1000};s.message='Surface construction started.';closeSheet();}}
+   if(act==='demopack'){const i=Number(parts[1]),p=packs[i];if(p&&!s.demoPacks.includes(i)){s.demoPacks.push(i);s.demoVipXP+=p.xp;vipGain(p.xp);reward({diamond:p.gems});s.message='Demo purchase complete. No money charged.';}}
+
+   if(act==='rename'){const i=Number(parts[1]);if(i>=4&&i<=6){const n=prompt('Commander name (visible in your local game)',commanders[i].name);if(n!==null&&safeName(n)){s.familyNames[i]=safeName(n);commanders[i].name=s.familyNames[i];recruitSheet(i);s.message='Legacy commander renamed.';}}}
+   if(act==='awakening'&&s.awakening===null){s.awakening=parts[1];if(parts[1]==='protect'){s.moral++;s.trust=Math.min(100,s.trust+10);reward({food:150,manuals:2});}else if(parts[1]==='control'){s.moral--;reward({energy:300,alloy:150});}else{reward({diamond:30,parts:2});}s.message='EVA has recorded your answer.';closeSheet();}
+   if(act==='eva'){openSheet(`<button class="close" data-act="close">Close ✕</button><div class="evaScene">${portrait(commanders[3])}<small>TRANSMISSION 021 · THE AWAKENING</small><h2>What are we rebuilding for?</h2><p>I have studied your choices, Commander. Dustin Jr., Logan, and Damien have answered our call. Should our new civilization protect life, impose order, or seek knowledge above all?</p></div>${s.awakening!==null?'<p>Your answer: '+s.awakening+'</p>':'<button data-act="awakening:protect">Protect life</button> <button data-act="awakening:control">Impose order</button> <button data-act="awakening:knowledge">Seek knowledge</button>'}`);}
+   if(act==='frontchoice'&&!s.frontierChoice&&s.l.core>=3){s.frontierChoice=parts[1];if(parts[1]==='cooperate'){s.moral++;s.trust=Math.min(100,s.trust+10);}else{s.moral--;s.res.energy+=100;}s.message='EVA recorded your frontier decision.';}
+   if(act==='skill'){const i=Number(parts[1]);if(s.commanders.includes(i)&&(s.cmdLv[i]||1)>=2&&(s.skills[i]||0)<5&&spend({manuals:1})){s.skills[i]=(s.skills[i]||0)+1;s.message='Commander skill improved.';}}
+   if(act==='craft'){const i=Number(parts[1]),g=gearList.find(x=>x.id===parts[2]);if(g&&s.commanders.includes(i)&&s.l.forge>=2&&(s.cmdGear[i]||[]).length<2&&!(s.cmdGear[i]||[]).includes(g.id)&&spend({parts:g.cost,alloy:100})){(s.cmdGear[i]??=[]).push(g.id);s.crafted++;s.message='Frontier equipment crafted.';}}
+   if(act==='raid' &&!s.raid&&Date.now()>=s.raidCooldown&&s.l.core>=2){s.raid={name:['Iron Legion','Machine Collective','Ash Raiders'][s.raidWins%3],power:35+s.raidWins*15,end:Date.now()+45000};s.message='Enemy raid detected. Reinforce defenses!';}
+   if(act==='advanced'){const u=parts[1];if(!s.training&&u==='cyber'&&s.l.barracks>=3&&spend({food:150,alloy:160}))s.training={unit:u,count:1,end:Date.now()+35000};if(!s.training&&u==='sentinels'&&s.l.hangar>=4&&spend({energy:240,alloy:220,parts:1}))s.training={unit:u,count:1,end:Date.now()+50000};}
+   if(act==='protocol'){const u=parts[1];if(!s.protocol&&s.l.lab>=2&&((u==='guardian'&&s.moral>0)||(u==='dominion'&&s.moral<0)||(u==='observer'&&s.moral===0))&&spend({energy:300})){s.protocol=u;s.message='Neural doctrine activated.';}}
+   if(act==='promote'){const i=Number(parts[1]);if(s.commanders.includes(i)&&(s.cmdLv[i]||1)>=3&&spend({parts:2})){s.promotions[i]=(s.promotions[i]||0)+1;s.message='Commander promoted.';}}
+   if(act==='tab'){ tab=parts[1]; closeSheet(); citySignature=''; }
+   if(act==='zoom'){ cityZoom=parts[1]==='reset'?1:Math.max(1,Math.min(2.5,cityZoom+(parts[1]==='in'?.25:-.25))); citySignature=''; }
+   if(act==='open'){ buildingSheet(parts[1]); }
+   if(act==='close'){ closeSheet(); }
+   if(act==='upgrade'){
+     const id=parts[1], cost={alloy:buildingCost(id)};
+     if(s.queue){ s.message='Construction queue busy.'; }
+     else if(id!=='core' && (s.l[id]||0)>=s.l.core){ s.message='Upgrade AI Core first.'; }
+     else if(spend(cost)){ s.queue={id,end:Date.now()+queueSeconds(id)*1000}; s.message=`Started upgrading ${defs.find(d=>d.id===id).name}.`; closeSheet(); }
+     else s.message='Not enough alloy.';
+   }
+   if(act==='speed'){
+     const mins=Number(parts[1]);
+     const key=mins===1?'speed1':'speed5';
+     if(!s.queue){ s.message='No active construction.'; }
+     else if(s.inv[key]>0){ s.inv[key]-=1; s.queue.end -= mins*60*1000; s.message=`Used a ${mins} minute speedup.`; if(s.queue.end<Date.now()) tick(); }
+   }
+   if(act==='train'){
+     if(parts[1]==='guards'){
+       if(s.l.barracks<1) s.message='Construct the Barracks first.';
+       else if(spend({food:40,alloy:40})){ s.guards+=2; s.message='Two guards trained.'; closeSheet(); }
+       else s.message='Insufficient resources.';
+     }
+     if(parts[1]==='drones'){
+       if(s.l.hangar<1) s.message='Construct the Drone Hangar first.';
+       else if(spend({energy:90,alloy:70,parts:1})){ s.drones+=1; s.message='A combat drone is ready.'; closeSheet(); }
+       else s.message='You need energy, alloy, and parts.';
+     }
+   }
+   if(act==='research'){
+     if(s.l.lab<1) s.message='Construct the Research Lab first.';
+     else if(s.researchQueue) s.message='Research already in progress.';
+     else if(spend({energy:120})){ let dur=s.commanders.includes(3)?16:20; s.researchQueue={name:`Protocol ${s.tech+1}`,end:Date.now()+dur*1000}; s.message='Research initiated.'; closeSheet(); }
+     else s.message='Not enough energy.';
+   }
+   if(act==='inspect'){inspectSite(Number(parts[1]));}
+   if(act==='reports'){reportSheet();}
+   if(act==='scout'){const i=Number(parts[1]);if(!s.scouted.includes(i)&&spend({energy:10})){s.scouted.push(i);s.message='Recon complete.';}inspectSite(i);}
+   if(act==='elite'){if(s.l.barracks>=2&&!s.training&&spend({food:80,alloy:80})){s.training={unit:'elites',count:2,end:Date.now()+25000};s.message='Elite training initiated.';closeSheet();}}
+   if(act==='gather'){const k=parts[1];if(['food','water','energy','alloy'].includes(k)&&!s.gather&&s.guards>=4){s.gather={resource:k,amount:180+s.l.core*40,end:Date.now()+45000};s.message='Civilian convoy deployed.';}}
+   if(act==='deploy'){const i=Number(parts[1]),site=sites[i],n=Number($('alloc')?.value),f=$('formation')?.value,lead=$('leader')?.value,ids=lead==='family'?[4,5,6]:lead==='none'?[]:[Number(lead)];if(site&&formations[f]&&Number.isInteger(n)&&n>0&&n<=freePower()&&s.armies.length<slots()&&!busySite(i)&&!s.territory.includes(i)&&ids.every(id=>availableLeaders().includes(id))){const power=planPower(n,ids,f),start=Date.now();s.armies.push({site:i,power,reserve:n,leaders:ids,formation:formations[f].name.toLowerCase(),start,end:start+site.time*1000*(f==='recon'?.7:1)});if(ids.length===3)s.familyMarches++;s.message='Army deployed · '+power+' attack power.';closeSheet();}else s.message='Army or commander unavailable.';}
+   if(act==='cmd'){ recruitSheet(Number(parts[1])); }
+   if(act==='recruit'){
+     const id=Number(parts[1]); const c=commanders.find(x=>x.id===id);
+     if(s.commanders.includes(id)) s.message='Already recruited.';
+     else if(spend({alloy:c.cost})){ s.commanders.push(id); s.cmdLv[id]=1; s.cmdGear[id]=[]; if(id===2) s.trust=Math.min(100,s.trust+10); s.message=`${c.name} joined your command.`; closeSheet(); }
+     else s.message='Not enough alloy.';
+   }
+   if(act==='cmdlevel'){
+     const id=Number(parts[1]);
+     if(!s.commanders.includes(id)) s.message='Recruit this commander first.';
+     else if(s.inv.manuals<1) s.message='No training manuals available.';
+     else { s.inv.manuals -=1; s.cmdLv[id]=(s.cmdLv[id]||1)+1; s.commanderLevel=Math.max(s.commanderLevel, Math.ceil(Object.values(s.cmdLv).reduce((a,b)=>a+b,0)/Math.max(1,Object.keys(s.cmdLv).length))); s.message='Commander leveled up.'; }
+   }
+   if(act==='gear'){ manageGear(Number(parts[1])); }
+   if(act==='equip'){
+     const id=Number(parts[1]), gearId=parts[2]; s.cmdGear[id]=s.cmdGear[id]||[];
+     if(s.cmdGear[id].length>=2) s.message='All gear slots are full.';
+     else if(s.cmdGear[id].includes(gearId)) s.message='Already equipped.';
+     else if(s.inv.parts<gearList.find(g=>g.id===gearId).cost) s.message='Not enough parts.';
+     else { s.inv.parts -= gearList.find(g=>g.id===gearId).cost; s.cmdGear[id].push(gearId); s.message='Gear equipped.'; closeSheet(); }
+   }
+   if(act==='buy'){
+     if(parts[1]==='speed1' && spend({diamond:10})){ s.inv.speed1 +=1; s.message='Purchased a 1 minute speedup.'; }
+     if(parts[1]==='crate' && spend({diamond:25})){ s.inv.crates +=1; s.message='Purchased a supply crate.'; }
+   }
+   if(act==='heal'){
+     if(s.injured<1) s.message='No injured troops.';
+     else if(s.l.med<1) s.message='Build the Infirmary first.';
+     else if(spend({water:25})){ s.injured -=1; s.message='One injured troop healed.'; closeSheet(); }
+     else s.message='Not enough water.';
+   }
+   if(act==='alliance'){
+     s.alliance='Last Light'; s.allianceCoins += 20; s.message='You joined the Last Light alliance.';
+   }
+   if(act==='donate'){
+     if(!s.alliance) s.message='Join an alliance first.';
+     else if(spend({alloy:50})){ s.donations +=1; s.allianceCoins += 15; vipGain(5); s.message='Donation complete. Alliance power grows.'; }
+     else s.message='Not enough alloy.';
+   }
+   if(act==='daily'){
+     const id=parts[1]; const m=currentDaily().find(x=>x.id===id);
+     if(m && !s.dailyClaimed.includes(id) && m.done()){ reward(m.reward); s.dailyClaimed.push(id); vipGain(15); s.message='Daily mission reward claimed.'; }
+   }
+   if(act==='event'){ eventSheet(parts[1]); }
+   if(act==='choice'){ handleChoice(parts[1],parts[2]); }
+   if(act==='chapter'){
+     const ch=nextChapter(); if(ch && ch.done(s)){ reward(ch.reward); s.chapter += 1; vipGain(25); s.message='Chapter reward claimed.'; }
+   }
+   if(act==='crate'){ openCrate(); }
+   if(act==='awaken'){
+     if(!s.legacyOath){
+       if(parts[1]==='protect'){ s.legacyOath='Protect Life'; s.trust=Math.min(100,s.trust+10); }
+       if(parts[1]==='explore'){ s.legacyOath='Claim the Frontier'; s.res.alloy+=300; }
+       if(parts[1]==='invent'){ s.legacyOath='Power the Future'; s.res.energy+=250; }
+       s.message='The brothers have taken their oath.';
+     }
+   }
+   if(act==='brother'){
+     const id=Number(parts[1]);
+     if(!s.commanders.includes(id)) s.message='Recruit this brother first.';
+     else if((s.brotherRanks[id]||0)>=3) s.message='Signature ability already maxed.';
+     else if(s.inv.manuals<1) s.message='No training manuals available.';
+     else { s.inv.manuals-=1; s.brotherRanks[id]=(s.brotherRanks[id]||0)+1; s.message='Signature ability improved.'; }
+   }
+   if(act==='bond'){
+     if(!s.brotherBonded && [4,5,6].every(id=>s.commanders.includes(id)) && [4,5,6].every(id=>(s.brotherRanks[id]||0)>=1)){
+       s.brotherBonded=true; s.trust=Math.min(100,s.trust+15); s.res.diamond+=50; s.message='Brothers of Afterlight bond activated.';
+     }
+   }
+   if(act==='loginreward'&&s.loginDay!==dayKey()){const r=loginReward();s.loginStreak=s.loginDay===dayKey(-1)?s.loginStreak+1:1;s.loginDay=dayKey();reward(r);vipGain(35);s.message='Daily supply drop collected.';}
+   if(act==='allytech'){const k=parts[1];if(s.alliance&&['industry','fortification'].includes(k)&&s.allianceTech[k]<5){const cost=30*(s.allianceTech[k]+1);if(s.allianceCoins>=cost){s.allianceCoins-=cost;s.allianceTech[k]++;s.message='Alliance research completed.';}}}
+   citySignature=''; render();
+ });
+ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('g[data-act]')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
+ $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeSheet(); });
+ render();
+ setInterval(render,1000);
+</script>
+</body>
+</html>
