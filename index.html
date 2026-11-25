@@ -149,7 +149,7 @@ button:focus-visible{outline:2px solid #f2d08b;outline-offset:2px}
       </div>
       <div class="center">
         <div class="small">Power</div>
-        <div class="big" id="power">0</div><button id="audioToggle" type="button" aria-label="Toggle game audio" aria-pressed="false" style="font-size:11px;padding:5px 8px;margin-top:4px;min-width:56px">♪ Off</button>
+        <div class="big" id="power">0</div><button type="button" data-prologue="0" style="font-size:11px;padding:5px 8px">Story</button><button id="audioToggle" type="button" aria-label="Toggle game audio" aria-pressed="false" style="font-size:11px;padding:5px 8px;margin-top:4px;min-width:56px">♪ Off</button>
       </div>
     </div>
     <div class="chips">
@@ -539,7 +539,7 @@ let drill=null;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-drill-start]');if(b)tacticalDrill(Number(b.dataset.drillStart));});
 function tacticalDrill(i){
  const site=sites[i];if(!site)return;
- drill={site:i,round:0,hp:100,enemy:100,charge:0,log:'EVA: Identify the enemy stance before issuing orders.',done:false};
+ drill={site:i,round:0,hp:100,enemy:100,charge:0,used:[],log:'EVA: Identify the enemy stance before issuing orders.',done:false};
  drawDrill();
 }
 function drillStance(d){return ['assault','fortify','flank'][(d.site+d.round)%3];}
@@ -547,24 +547,37 @@ function drawDrill(){
  const d=drill;if(!d)return;
  const stance=drillStance(d);
  const hint={assault:'Enemy is advancing. Fortify to absorb the attack.',fortify:'Enemy is entrenched. Flank to bypass defenses.',flank:'Enemy is maneuvering. Assault before they surround you.'}[stance];
- const btn=(a,label)=>'<button type="button" data-drill="'+a+'" '+(d.done||(a==='ability'&&d.charge<2)?'disabled':'')+'>'+label+'</button>';
- openSheet('<button class="close" data-act="close">Close ✕</button><small>EVA COMBAT SIMULATOR · NO TROOP LOSSES OR LOOT</small><h2>'+safeBattleText(sites[d.site].name)+'</h2><div class="combatScene" style="padding:16px;background:linear-gradient(160deg,#26333c,#10161a)"><div class="flex"><b>◈ YOUR SQUAD</b><b>◆ HOSTILES</b></div><div class="grid2"><div><h2>'+d.hp+'%</h2><div class="progress"><i style="width:'+d.hp+'%"></i></div></div><div><h2>'+d.enemy+'%</h2><div class="progress"><i style="width:'+d.enemy+'%;background:#b15d59"></i></div></div></div><p>Round '+d.round+' · EVA charge '+d.charge+'/2</p><p role="status">'+safeBattleText(d.log)+'</p></div><div class="card"><h3>'+(d.done?(d.enemy===0?'SIMULATION VICTORY':'SIMULATION DEFEAT'):'Enemy stance: '+stance.toUpperCase())+'</h3><p>'+(d.done?'Training complete. Your actual army and resources are unchanged.':hint)+'</p><div class="row">'+btn('assault','⚔ Assault')+btn('fortify','◈ Fortify')+btn('flank','↗ Flank')+btn('ability','ϟ EVA Overdrive')+'</div><p class="small">Correct counters charge EVA. Overdrive deals heavy damage.</p><button data-drill="reset" type="button">Restart training</button></div>');
+ const heroes={vanguard:'Dustin Jr. · Aegis',pathfinder:'Logan · Breakthrough',innovator:'Damien · Reactor Surge'};
+ const btn=(a,label)=>'<button type="button" data-drill="'+a+'" '+(d.done||(a==='ability'&&d.charge<2)||(heroes[a]&&d.used.includes(a))?'disabled':'')+'>'+label+'</button>';
+ openSheet('<button class="close" data-act="close">Close ✕</button><small>EVA COMBAT ACADEMY · NO TROOP LOSSES</small><h2>'+safeBattleText(sites[d.site].name)+'</h2><div class="combatScene" style="padding:16px;background:linear-gradient(160deg,#26333c,#10161a)"><div class="flex"><b>◈ YOUR SQUAD</b><b>◆ HOSTILES</b></div><div class="grid2"><div><h2>'+d.hp+'%</h2><div class="progress"><i style="width:'+d.hp+'%"></i></div></div><div><h2>'+d.enemy+'%</h2><div class="progress"><i style="width:'+d.enemy+'%;background:#b15d59"></i></div></div></div><p>Round '+d.round+' · EVA charge '+d.charge+'/2</p><p role="status">'+safeBattleText(d.log)+'</p></div><div class="card"><h3>'+(d.done?(d.enemy===0?'SIMULATION VICTORY':'SIMULATION DEFEAT'):'Enemy stance: '+stance.toUpperCase())+'</h3><p>'+(d.done?'Training complete. Actual troops and resources are unchanged. A victory records your academy milestone.':hint)+'</p><div class="row">'+btn('assault','⚔ Assault')+btn('fortify','◈ Fortify')+btn('flank','↗ Flank')+btn('ability','ϟ EVA Overdrive')+'</div><p class="small">Correct counters charge EVA. Overdrive deals heavy damage.</p><h3>Legendary brother abilities</h3><p>Each ability is available once per simulation. Training uses guest commanders even before recruitment.</p><div class="row">'+Object.entries(heroes).map(([a,label])=>btn(a,label)).join('')+'</div><p class="small">Aegis blocks retaliation · Breakthrough deals 40 damage · Reactor Surge charges EVA.</p><button data-drill="reset" type="button">Restart training</button></div>');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-drill]');if(!b||!drill||b.disabled)return;
  const a=b.dataset.drill,d=drill;
  if(a==='reset'){tacticalDrill(d.site);return;}
- if(d.done||!['assault','fortify','flank','ability'].includes(a)||(a==='ability'&&d.charge<2))return;
+ if(d.done||!['assault','fortify','flank','ability','vanguard','pathfinder','innovator'].includes(a)||(a==='ability'&&d.charge<2))return;
  const correct={assault:'fortify',fortify:'flank',flank:'assault'}[drillStance(d)]===a;
- const hit=a==='ability'?45:correct?27:12;
- const loss=a==='ability'?9:correct?8:23;
+ const hero=['vanguard','pathfinder','innovator'].includes(a);if(hero&&d.used.includes(a))return;if(hero)d.used.push(a);
+ const hit=a==='vanguard'?18:a==='pathfinder'?40:a==='innovator'?15:a==='ability'?45:correct?27:12;
+ const loss=a==='vanguard'?0:a==='pathfinder'?12:a==='innovator'?10:a==='ability'?9:correct?8:23;
  d.enemy=Math.max(0,d.enemy-hit);d.hp=Math.max(0,d.hp-(d.enemy===0?0:loss));
- d.charge=a==='ability'?0:Math.min(2,d.charge+(correct?1:0));
+ d.charge=a==='innovator'?2:a==='ability'?0:Math.min(2,d.charge+(correct?1:0));
  d.round++;d.done=d.enemy===0||d.hp===0;
- d.log=a==='ability'?'EVA Overdrive activated.':correct?'Counter successful. Enemy formation disrupted.':'Enemy countered your order. Adapt your strategy.';
+ d.log=a==='vanguard'?'Dustin Jr. deployed Aegis. Retaliation blocked.':a==='pathfinder'?'Logan broke through the enemy line.':a==='innovator'?'Damien restored EVA to full charge.':a==='ability'?'EVA Overdrive activated.':correct?'Counter successful. Enemy formation disrupted.':'Enemy countered your order. Adapt your strategy.';
+ if(d.done&&d.enemy===0&&!s.academyCertified){s.academyCertified=true;save();d.log+=' Academy certification earned.';}
  drawDrill();
 });
 
+
+function openingStory(page=0){
+ const scenes=[['DAY ZERO','The world went silent. Cities fell, networks died, and the survivors vanished beneath the earth.'],['SECTOR 07','A dormant intelligence awakened beneath the ruins. EVA found a signal: three brothers and a civilization worth saving.'],['YOUR DIRECTIVE','Rebuild the sanctuary. Explore the frontier. Every decision will shape the world that rises from the ashes.']];
+ const scene=scenes[page];
+ openSheet('<div class="evaScene" style="min-height:220px;padding:24px;background:radial-gradient(ellipse at top,#39454c,#10181d 75%)"><small>AFTERLIGHT · PROLOGUE '+(page+1)+'/3</small><h2 style="letter-spacing:3px">'+scene[0]+'</h2><p>'+scene[1]+'</p></div><div class="row"><button data-prologue="'+(page+1)+'">'+(page===2?'Enter Sector 07':'Continue →')+'</button><button data-prologue="3">Skip</button></div>');
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-prologue]');if(!b)return;
+ const n=Number(b.dataset.prologue);if(n===3){s.prologueSeen=true;save();closeSheet();}else if(n>=0&&n<3)openingStory(n);
+});
  function inspectSite(i){const site=sites[i],owned=s.territory.includes(i);const leaders=availableLeaders();openSheet(`<button class="close" data-act="close">Close ✕</button><h2>${site.icon} ${site.name}</h2><p>Enemy power ${site.req} · Available troop power ${freePower()}</p><p>Loot: ${Object.entries(site.reward).map(([k,v])=>v+' '+k).join(', ')}</p><button data-act="scout:${i}" ${owned||s.scouted.includes(i)?'disabled':''}>${s.scouted.includes(i)?'Scouted':'Scout · 10 energy'}</button><div class="card"><h3>Deploy army</h3><button type="button" data-drill-start="${i}">⚔ Practice tactical combat</button><p>Slots ${s.armies.length}/${slots()} · Core Lv 3 and 6 unlock extra armies.</p><label>Troop power allocation <input id="alloc" type="range" min="1" max="${Math.max(1,freePower())}" value="${Math.max(1,freePower())}" oninput="document.getElementById('allocation').textContent=this.value"></label> <b id="allocation">${Math.max(1,freePower())}</b><p><label>Commander <select id="leader"><option value="none">No commander</option>${leaders.map(id=>`<option value="${id}">${commanders[id].name}</option>`).join('')}${[4,5,6].every(id=>leaders.includes(id))?'<option value="family">Three brothers (+12)</option>':''}</select></label></p><label>Formation <select id="formation"><option value="assault">Assault · +15% power</option><option value="shield">Shield wall · fewer injuries</option><option value="recon">Recon · +5% power, faster travel</option></select></label><p>Insufficient attack power can result in defeat.</p><button data-act="deploy:${i}" ${owned||busySite(i)||s.armies.length>=slots()||freePower()<1?'disabled':''}>${owned?'Controlled':'Deploy army'}</button></div>`);}
  function resolveArmy(m){const site=sites[m.site];if(!site||s.territory.includes(m.site))return;const win=m.power>=site.req;const injured=m.formation==='shield wall'?0:Math.min(Math.max(0,s.guards-s.injured),win&&m.power>=site.req*1.5?0:Math.ceil(site.req/40));s.injured+=injured;if(win){s.territory.push(m.site);reward(site.reward);if((m.leaders||[]).includes(1))s.res.alloy+=Math.round((site.reward.alloy||0)*.15);s.campaignWins++;}s.reports.push({name:site.name+' · '+m.formation,power:m.power,enemy:site.req,win,injured,leaders:(m.leaders||[]).slice(),formation:m.formation});s.reports=s.reports.slice(-30);s.message=win?site.name+' captured!':'Army returned after defeat.';}
  function safeBattleText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -846,6 +859,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-clou
  document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('g[data-act]')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
  $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeSheet(); });
  render();
+ if(!s.prologueSeen&&!s.flags?.knock&&s.chapter===0)openingStory();
  setInterval(render,1000);
 </script>
 
