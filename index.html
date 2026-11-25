@@ -312,6 +312,25 @@ function armyPower(st=s){
 function totalPower(){
   return Object.values(s.surface).reduce((a,b)=>a+b,0)*180+Object.values(s.l).reduce((a,b)=>a+b,0)*120 + armyPower()*45 + s.commanders.length*180 + s.tech*120 + s.territory.length*220;
 }
+
+function evaBriefing(){
+ const mood=aiMood();
+ const intro=mood==='Guardian'?'Your compassion has given the survivors hope.':mood==='Dominion'?'Your decisions have established order. I am monitoring the cost.':'I am studying your decisions, Commander.';
+ const alert=s.injured>0?'Our wounded need medical attention.':s.people>=popCap()?'Our shelters are at capacity. Expand our living quarters.':s.queue?'Construction is in progress.':'Our settlement awaits your next directive.';
+ return intro+' '+alert;
+}
+function evaSpeak(message){
+ if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return false;
+ try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(message);u.lang='en-US';u.rate=.88;u.pitch=.92;u.volume=.85;window.speechSynthesis.speak(u);return true;}catch(e){return false;}
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-eva-voice]');
+ if(!b)return;
+ if(b.dataset.evaVoice==='stop'){if('speechSynthesis' in window)window.speechSynthesis.cancel();return;}
+ if(!evaSpeak(evaBriefing()+' '+(s.awakening===null?'What are we rebuilding for? Should our civilization protect life, impose order, or seek knowledge?':'Your directive has been recorded.')))b.textContent='Voice unavailable';
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&'speechSynthesis' in window)window.speechSynthesis.cancel();});
+
 function aiMood(){ return s.moral>0 ? 'Guardian' : s.moral<0 ? 'Dominion' : 'Observer'; }
 function popCap(){ return 6 + s.l.quarters*10; }
 function buildingCost(id){ const d=defs.find(x=>x.id===id); return Math.round(d.base*Math.pow(1.58,s.l[id]||0)); }
@@ -625,7 +644,7 @@ function resolveMarchOld(){
 
    if(act==='rename'){const i=Number(parts[1]);if(i>=4&&i<=6){const n=prompt('Commander name (visible in your local game)',commanders[i].name);if(n!==null&&safeName(n)){s.familyNames[i]=safeName(n);commanders[i].name=s.familyNames[i];recruitSheet(i);s.message='Legacy commander renamed.';}}}
    if(act==='awakening'&&s.awakening===null){s.awakening=parts[1];if(parts[1]==='protect'){s.moral++;s.trust=Math.min(100,s.trust+10);reward({food:150,manuals:2});}else if(parts[1]==='control'){s.moral--;reward({energy:300,alloy:150});}else{reward({diamond:30,parts:2});}s.message='EVA has recorded your answer.';closeSheet();}
-   if(act==='eva'){openSheet(`<button class="close" data-act="close">Close ✕</button><div class="evaScene">${portrait(commanders[3])}<small>TRANSMISSION 021 · THE AWAKENING</small><h2>What are we rebuilding for?</h2><p>I have studied your choices, Commander. Dustin Jr., Logan, and Damien have answered our call. Should our new civilization protect life, impose order, or seek knowledge above all?</p></div>${s.awakening!==null?'<p>Your answer: '+s.awakening+'</p>':'<button data-act="awakening:protect">Protect life</button> <button data-act="awakening:control">Impose order</button> <button data-act="awakening:knowledge">Seek knowledge</button>'}`);}
+   if(act==='eva'){openSheet(`<button class="close" data-act="close">Close ✕</button><div class="evaScene">${portrait(commanders[3])}<small>TRANSMISSION 021 · THE AWAKENING · ${aiMood()}</small><h2>What are we rebuilding for?</h2><p class="pill">${evaBriefing()}</p><div class="row"><button data-eva-voice="play" type="button">▶ Listen to EVA</button><button data-eva-voice="stop" type="button">Stop voice</button></div><p>I have studied your choices, Commander. Dustin Jr., Logan, and Damien have answered our call. Should our new civilization protect life, impose order, or seek knowledge above all?</p></div>${s.awakening!==null?'<p>Your answer: '+s.awakening+'</p>':'<button data-act="awakening:protect">Protect life</button> <button data-act="awakening:control">Impose order</button> <button data-act="awakening:knowledge">Seek knowledge</button>'}`);}
    if(act==='frontchoice'&&!s.frontierChoice&&s.l.core>=3){s.frontierChoice=parts[1];if(parts[1]==='cooperate'){s.moral++;s.trust=Math.min(100,s.trust+10);}else{s.moral--;s.res.energy+=100;}s.message='EVA recorded your frontier decision.';}
    if(act==='skill'){const i=Number(parts[1]);if(s.commanders.includes(i)&&(s.cmdLv[i]||1)>=2&&(s.skills[i]||0)<5&&spend({manuals:1})){s.skills[i]=(s.skills[i]||0)+1;s.message='Commander skill improved.';}}
    if(act==='craft'){const i=Number(parts[1]),g=gearList.find(x=>x.id===parts[2]);if(g&&s.commanders.includes(i)&&s.l.forge>=2&&(s.cmdGear[i]||[]).length<2&&!(s.cmdGear[i]||[]).includes(g.id)&&spend({parts:g.cost,alloy:100})){(s.cmdGear[i]??=[]).push(g.id);s.crafted++;s.message='Frontier equipment crafted.';}}
