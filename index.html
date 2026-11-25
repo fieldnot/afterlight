@@ -308,7 +308,7 @@ function careerPanel(){
  return '<div class="card"><h3>Commander career · '+(['Recruit','Survivor','Officer','Veteran','Warlord','Founder'][n])+'</h3><div class="progress"><i style="width:'+n*20+'%"></i></div><p>'+n+'/5 milestones</p>'+tasks.map(t=>'<p>'+(t[1]?'✓ ':'○ ')+t[0]+'</p>').join('')+'</div>';
 }
 
-function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list">${welcomeTrack()}${careerPanel()}<div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
+function renderEmpire(){const r=loginReward();$('view').insertAdjacentHTML('afterbegin',`<div class="panel empire"><div class="head"><b>THE LAST EMPIRE</b><span class="pill">VIP ${s.vip}</span></div><div class="body list">${welcomeTrack()}${careerPanel()}${operationPanel()}<div class="card"><h3>Daily supply drop</h3><p>Login streak: ${s.loginStreak} days</p><p>${Object.entries(r).map(([k,v])=>v+' '+k).join(' · ')}</p><button data-act="loginreward" ${s.loginDay===dayKey()?'disabled':''}>${s.loginDay===dayKey()?'Collected today':'Collect supply drop'}</button></div><div class="card"><h3>VIP command privileges</h3><p>${s.vipXP} earned XP · Level ${s.vip}/10 · ${s.vip*2}% faster construction</p><div class="progress"><i style="width:${s.vip>=10?100:s.vipXP%100}%"></i></div><p>Earn XP from daily rewards, chapters and donations. No purchases required.</p></div><div class="card"><h3>Last Light technology</h3><p>Alliance coins: ${s.allianceCoins} · Local single-player alliance</p>${[['industry','Industrial network','+0.15 alloy/sec per level'],['fortification','Fortification','+10 defense per level']].map(([k,n,b])=>`<div class="skillline"><b>${n} · Lv ${s.allianceTech[k]}/5</b><p>${b}</p><button data-act="allytech:${k}" ${!s.alliance||s.allianceTech[k]>=5||s.allianceCoins<30*(s.allianceTech[k]+1)?'disabled':''}>Research · ${30*(s.allianceTech[k]+1)} coins</button></div>`).join('')}</div><div class="card"><h3>Civilization record</h3><p>Power ${fmt(totalPower())} · Territories ${s.territory.length}/${sites.length} · Raids repelled ${s.raidWins} · Commanders ${s.commanders.length}</p></div></div></div>`)}
 const formations={assault:{name:'Assault',mult:1.15},shield:{name:'Shield wall',mult:1},recon:{name:'Recon',mult:1.05}};
 function slots(){return Math.min(3,1+Math.floor(s.l.core/3));}
 function unitsHome(){return Math.max(0,s.guards-s.injured)*2+s.elites*4+s.drones*5+s.cyber*8+s.sentinels*14;}
@@ -570,16 +570,17 @@ function tacticalDrill(i){
 function drillStance(d){return ['assault','fortify','flank'][(d.site+d.round)%3];}
 function drawDrill(){
  const d=drill;if(!d)return;
+ const op=Number.isInteger(d.operation)?operations[d.operation]:null;
  const stance=drillStance(d);
  const hint={assault:'Enemy is advancing. Fortify to absorb the attack.',fortify:'Enemy is entrenched. Flank to bypass defenses.',flank:'Enemy is maneuvering. Assault before they surround you.'}[stance];
  const heroes={vanguard:'Dustin Jr. · Aegis',pathfinder:'Logan · Breakthrough',innovator:'Damien · Reactor Surge'};
  const btn=(a,label)=>'<button type="button" data-drill="'+a+'" '+(d.done||(a==='ability'&&d.charge<2)||(heroes[a]&&d.used.includes(a))?'disabled':'')+'>'+label+'</button>';
- openSheet('<button class="close" data-act="close">Close ✕</button><small>EVA COMBAT ACADEMY · NO TROOP LOSSES</small><h2>'+safeBattleText(sites[d.site].name)+'</h2><div class="combatScene" style="padding:16px;background:linear-gradient(160deg,#26333c,#10161a)"><div class="flex"><b>◈ YOUR SQUAD</b><b>◆ HOSTILES</b></div><div class="grid2"><div><h2>'+d.hp+'%</h2><div class="progress"><i style="width:'+d.hp+'%"></i></div></div><div><h2>'+d.enemy+'%</h2><div class="progress"><i style="width:'+d.enemy+'%;background:#b15d59"></i></div></div></div><p>Round '+d.round+' · EVA charge '+d.charge+'/2</p><p role="status">'+safeBattleText(d.log)+'</p></div><div class="card"><h3>'+(d.done?(d.enemy===0?'SIMULATION VICTORY':'SIMULATION DEFEAT'):'Enemy stance: '+stance.toUpperCase())+'</h3><p>'+(d.done?'Training complete. Actual troops and resources are unchanged. A victory records your academy milestone.':hint)+'</p><div class="row">'+btn('assault','⚔ Assault')+btn('fortify','◈ Fortify')+btn('flank','↗ Flank')+btn('ability','ϟ EVA Overdrive')+'</div><p class="small">Correct counters charge EVA. Overdrive deals heavy damage.</p><h3>Legendary brother abilities</h3><p>Each ability is available once per simulation. Training uses guest commanders even before recruitment.</p><div class="row">'+Object.entries(heroes).map(([a,label])=>btn(a,label)).join('')+'</div><p class="small">Aegis blocks retaliation · Breakthrough deals 40 damage · Reactor Surge charges EVA.</p><button data-drill="reset" type="button">Restart training</button></div>');
+ openSheet('<button class="close" data-act="close">Close ✕</button><small>'+(op?'CAMPAIGN OPERATION · '+op.faction:'EVA COMBAT ACADEMY · NO TROOP LOSSES')+'</small><h2>'+safeBattleText(op?op.name:sites[d.site].name)+'</h2><div class="combatScene" style="padding:16px;background:linear-gradient(160deg,#26333c,#10161a)"><div class="flex"><b>◈ YOUR SQUAD</b><b>◆ HOSTILES</b></div><div class="grid2"><div><h2>'+d.hp+'%</h2><div class="progress"><i style="width:'+d.hp+'%"></i></div></div><div><h2>'+Math.ceil(d.enemy/(d.maxEnemy||100)*100)+'%</h2><div class="progress"><i style="width:'+(d.enemy/(d.maxEnemy||100)*100)+'%;background:#b15d59"></i></div></div></div><p>Round '+d.round+' · EVA charge '+d.charge+'/2</p><p role="status">'+safeBattleText(d.log)+'</p></div><div class="card"><h3>'+(d.done?(d.enemy===0?(op?'OPERATION VICTORY':'SIMULATION VICTORY'):(op?'OPERATION DEFEAT':'SIMULATION DEFEAT')):'Enemy stance: '+stance.toUpperCase())+'</h3><p>'+(d.done?(op?(d.enemy===0?'Operation secured. First-clear supplies awarded.':'Operation failed. Retry without losing your base troops.'):'Training complete. Actual troops and resources are unchanged. A victory records your academy milestone.'):hint)+'</p><div class="row">'+btn('assault','⚔ Assault')+btn('fortify','◈ Fortify')+btn('flank','↗ Flank')+btn('ability','ϟ EVA Overdrive')+'</div><p class="small">Correct counters charge EVA. Overdrive deals heavy damage.</p><h3>Legendary brother abilities</h3><p>Each ability is available once per battle. Guest commanders assist in these missions.</p><div class="row">'+Object.entries(heroes).map(([a,label])=>btn(a,label)).join('')+'</div><p class="small">Aegis blocks retaliation · Breakthrough deals 40 damage · Reactor Surge charges EVA.</p><button data-drill="reset" type="button">'+(op?'Retry operation':'Restart training')+'</button></div>');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-drill]');if(!b||!drill||b.disabled)return;
  const a=b.dataset.drill,d=drill;
- if(a==='reset'){tacticalDrill(d.site);return;}
+ if(a==='reset'){if(Number.isInteger(d.operation)){if(d.operation===operationProgress())launchOperation(d.operation);else closeSheet();}else tacticalDrill(d.site);return;}
  if(d.done||!['assault','fortify','flank','ability','vanguard','pathfinder','innovator'].includes(a)||(a==='ability'&&d.charge<2))return;
  const correct={assault:'fortify',fortify:'flank',flank:'assault'}[drillStance(d)]===a;
  const hero=['vanguard','pathfinder','innovator'].includes(a);if(hero&&d.used.includes(a))return;if(hero)d.used.push(a);
@@ -589,10 +590,32 @@ document.addEventListener('click',e=>{
  d.charge=a==='innovator'?2:a==='ability'?0:Math.min(2,d.charge+(correct?1:0));
  d.round++;d.done=d.enemy===0||d.hp===0;
  d.log=a==='vanguard'?'Dustin Jr. deployed Aegis. Retaliation blocked.':a==='pathfinder'?'Logan broke through the enemy line.':a==='innovator'?'Damien restored EVA to full charge.':a==='ability'?'EVA Overdrive activated.':correct?'Counter successful. Enemy formation disrupted.':'Enemy countered your order. Adapt your strategy.';
- if(d.done&&d.enemy===0&&!s.academyCertified){s.academyCertified=true;save();d.log+=' Academy certification earned.';}
+ if(d.done&&d.enemy===0&&Number.isInteger(d.operation)&&d.operation===operationProgress()){reward(operations[d.operation].loot);s.operationProgress=d.operation+1;s.message='Operation secured: '+operations[d.operation].name;save();d.log+=' First-clear rewards received.';}else if(d.done&&d.enemy===0&&!Number.isInteger(d.operation)&&!s.academyCertified){s.academyCertified=true;save();d.log+=' Academy certification earned.';}
  drawDrill();
 });
 
+
+
+const operations=[
+ {name:'The Broken Signal',faction:'Ash Raiders',story:'A distress beacon leads to a raider checkpoint. Recover the missing supply convoy.',hp:100,core:1,loot:{alloy:150,food:100}},
+ {name:'Iron Gate',faction:'Iron Covenant',story:'An armored patrol controls the only road into the northern wastes.',hp:125,core:2,loot:{energy:200,parts:2}},
+ {name:'The Hollow City',faction:'Hollow Legion',story:'A hostile faction occupies the abandoned communications district.',hp:145,core:2,loot:{alloy:300,manuals:2}},
+ {name:'Warden of the Ashes',faction:'BOSS · Ash Warden',story:'The raider commander challenges Sector 07 for control of the frontier.',hp:175,core:3,loot:{diamond:40,parts:4,manuals:3}},
+ {name:'The Last Broadcast',faction:'BOSS · Signal Revenant',story:'EVA detects a rival machine intelligence transmitting from the ruins.',hp:200,core:4,loot:{diamond:75,alloy:500,manuals:4}}
+];
+function operationProgress(){return Math.max(0,Math.min(operations.length,Math.floor(Number(s.operationProgress)||0)));}
+function operationPanel(){
+ const n=operationProgress();
+ return '<div class="card"><h3>CAMPAIGN · Echoes of the Fall</h3><p>'+n+'/'+operations.length+' operations secured. First-clear rewards only.</p>'+operations.map((o,i)=>'<div class="skillline"><b>'+ (i+1)+'. '+o.name+'</b><p>'+o.faction+' · AI Core '+o.core+' · '+Object.entries(o.loot).map(([k,v])=>v+' '+k).join(' · ')+'</p><button data-operation="'+i+'" '+(i!==n||s.l.core<o.core?'disabled':'')+'>'+(i<n?'Secured':i>n?'Locked':s.l.core<o.core?'Upgrade AI Core':'Launch operation')+'</button></div>').join('')+'</div>';
+}
+function launchOperation(i){
+ const o=operations[i];if(!o||i!==operationProgress()||s.l.core<o.core)return;
+ drill={site:i,operation:i,round:0,hp:100,enemy:o.hp,maxEnemy:o.hp,charge:0,used:[],log:o.story,done:false};
+ drawDrill();
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-operation]');if(b&&!b.disabled)launchOperation(Number(b.dataset.operation));
+});
 
 function openingStory(page=0){
  const scenes=[['DAY ZERO','The world went silent. Cities fell, networks died, and the survivors vanished beneath the earth.'],['SECTOR 07','A dormant intelligence awakened beneath the ruins. EVA found a signal: three brothers and a civilization worth saving.'],['YOUR DIRECTIVE','Rebuild the sanctuary. Explore the frontier. Every decision will shape the world that rises from the ashes.']];
