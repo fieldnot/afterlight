@@ -1,6 +1,11 @@
-name: Afterlight iOS unsigned build
+name: Afterlight iOS build and TestFlight
 on:
   workflow_dispatch:
+    inputs:
+      upload_testflight:
+        description: Upload the signed release to App Store Connect for TestFlight
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -10,6 +15,7 @@ on:
       - 'package.json'
       - 'capacitor.config.json'
       - 'scripts/**'
+      - 'ios-release/**'
       - '.github/workflows/ios-build.yml'
 permissions:
   contents: read
@@ -36,7 +42,25 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
+      - name: Select an installed Xcode 26 or newer
+        run: |
+          app=$(python3 - <<'PY'
+          import glob, plistlib, re
+          from pathlib import Path
+          choices = []
+          for path in glob.glob('/Applications/Xcode*.app'):
+              with open(Path(path) / 'Contents' / 'Info.plist', 'rb') as f:
+                  version = plistlib.load(f)['CFBundleShortVersionString']
+              if re.fullmatch(r'\d+(\.\d+)*', version) and 'beta' not in path.lower():
+                  parts = tuple(map(int, version.split('.')))
+                  if parts[0] >= 26:
+                      choices.append((parts, path))
+          print(max(choices)[1])
+          PY
+          )
+          echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
       - run: npm run ios:prepare
+      - run: bash ios-release/prepare.sh
       - run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -derivedDataPath build/ios build
       - uses: actions/upload-artifact@v4
         with:
@@ -44,3 +68,17 @@ jobs:
           path: build/ios/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
           retention-days: 7
+      - name: Archive for iPhone
+        env:
+          UPLOAD_TESTFLIGHT: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_testflight && github.ref == 'refs/heads/main' }}
+          APPLE_TEAM_ID: ${{ inputs.upload_testflight && github.ref == 'refs/heads/main' && secrets.APPLE_TEAM_ID || '' }}
+          ASC_KEY_ID: ${{ inputs.upload_testflight && github.ref == 'refs/heads/main' && secrets.ASC_KEY_ID || '' }}
+          ASC_ISSUER_ID: ${{ inputs.upload_testflight && github.ref == 'refs/heads/main' && secrets.ASC_ISSUER_ID || '' }}
+          ASC_PRIVATE_KEY: ${{ inputs.upload_testflight && github.ref == 'refs/heads/main' && secrets.ASC_PRIVATE_KEY || '' }}
+        run: bash ios-release/archive.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afterlight-iphone-release
+          path: build/Afterlight-device.zip
+          if-no-files-found: error
+          retention-days: 30
