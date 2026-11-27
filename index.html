@@ -283,7 +283,7 @@ chapters.push(
 const fresh=()=>({
   ver:'2.0',
   res:{food:320,water:280,energy:240,alloy:520,diamond:80,coins:0},
-  inv:{speed1:5,speed5:2,manuals:2,medkits:1,parts:0,crates:1},
+  inv:{speed1:5,speed5:2,speed15:0,speed60:0,speed480:0,speed1440:0,manuals:2,medkits:1,parts:0,crates:1},
   l:{core:1,reactor:1,farm:1,water:1,quarters:1,lab:0,barracks:0,med:0,forge:1,market:0,hangar:0,wall:1},
   people:6,popIdle:6,trust:50,moral:0,commanderLevel:1,vip:1,queue:null,march:null,last:Date.now(),
   commanders:[],cmdLv:{},cmdGear:{},tech:0,techSpent:0,researchQueue:null,
@@ -600,7 +600,12 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&'speechSyn
 function aiMood(){ return s.moral>0 ? 'Guardian' : s.moral<0 ? 'Dominion' : 'Observer'; }
 function popCap(){ return 6 + s.l.quarters*10; }
 function buildingCost(id){ const d=defs.find(x=>x.id===id); return Math.round(d.base*Math.pow(1.58,s.l[id]||0)); }
-function queueSeconds(id){ let t = 10 + (s.l[id]||0)*8; if(s.commanders.includes(0)) t*=0.8; t*=Math.max(.55,1-(s.skills[0]||0)*.06); return Math.max(1,Math.round(t*(1-s.vip*.02))); }
+const coreBuildSeconds=[0,5,5,30,90,300,600,1200,2700,4800,7200,10800,16200,21600,32400,43200,57600,79200,108000,144000,172800,259200,345600,518400,691200,864000,1123200,1468800,1814400,2160000,2592000];
+function queueSeconds(id){const level=(s.l[id]||0)+1;let t=coreBuildSeconds[Math.min(30,level)]*(id==='core'?1:.35);if(s.commanders.includes(0))t*=.8;t*=Math.max(.55,1-(s.skills[0]||0)*.06);return Math.max(1,Math.round(t*Math.max(.6,1-s.vip*.02)));}
+function durationText(seconds){const n=Math.max(0,Math.ceil(seconds)),d=Math.floor(n/86400),h=Math.floor(n/3600)%24,m=Math.floor(n/60)%60;return d?d+'d '+h+'h':h?h+'h '+m+'m':m?m+'m '+n%60+'s':n+'s';}
+const speedItems=[{mins:1,price:10},{mins:5,price:40},{mins:15,price:100},{mins:60,price:320},{mins:480,price:2100},{mins:1440,price:5500}];
+function speedPanel(){if(!s.queue)return '';return '<div class="card"><h3>Construction acceleration</h3><p>Remaining: '+timeLeft(s.queue.end)+'</p>'+speedItems.map(v=>'<button data-act="speed:'+v.mins+'" '+(!s.inv['speed'+v.mins]?'disabled':'')+'>'+durationText(v.mins*60)+' · '+(s.inv['speed'+v.mins]||0)+' owned</button>').join(' ')+'<p class="small">Use earned items to finish sooner. Unused time on an item is not refunded.</p></div>';}
+function supplyExchange(){return '<div class="card"><h3>Resource & speed-up exchange</h3><p>Spend earned diamonds, not real money. Market level 1 required.</p>'+speedItems.map(v=>'<button data-act="buy:speed'+v.mins+'" '+(s.l.market<1||s.res.diamond<v.price?'disabled':'')+'>'+durationText(v.mins*60)+' · '+v.price+' diamonds</button>').join(' ')+'<div class="line"></div>'+[['alloy','Alloy'],['food','Food'],['water','Water'],['energy','Energy']].map(([k,n])=>'<button data-act="supply:'+k+'" '+(s.l.market<1||s.res.diamond<25?'disabled':'')+'>'+fmt(500*Math.max(1,s.l.core))+' '+n+' · 25 diamonds</button>').join(' ')+'</div>';}
 function currentDaily(){
   if(s.dailySeed!==new Date().toDateString()){ s.dailySeed=new Date().toDateString(); s.dailyClaimed=[]; }
   return [
@@ -670,7 +675,7 @@ function animateDrillHit(oldHp,oldEnemy,action,correct){
 }
 
 function reward(obj){ for(const [k,v] of Object.entries(obj)){ if(k in s.res) s.res[k]=(s.res[k]||0)+v; else s.inv[k]=(s.inv[k]||0)+v; } queueRewardFeedback(obj); }
-function timeLeft(ts){ const s=Math.max(0,Math.ceil((ts-Date.now())/1000)); const m=Math.floor(s/60), ss=s%60, h=Math.floor(m/60), mm=m%60; return h?`${h}h ${mm}m`:(m?`${m}m ${ss}s`:`${ss}s`); }
+function timeLeft(ts){return durationText((ts-Date.now())/1000);}
 function openSheet(html){ $('sheet').innerHTML=html; $('modal').classList.add('show'); }
 function closeSheet(){ $('modal').classList.remove('show'); }
 function buildingSheet(id){
@@ -682,11 +687,11 @@ function buildingSheet(id){
     <div class="pill">${d.icon} ${d.desc}</div>
     <div class="line"></div>
     <div class="grid2">
-      <div class="card"><h3>Upgrade</h3><p>Improves this building's output and unlocks stronger progression.</p><p><b>Cost:</b> ${fmt(upgradeCost.alloy)} alloy<br><b>Time:</b> ${queueSeconds(id)}s</p>
-      <button data-act="upgrade:${id}" ${s.queue||locked||!canAfford(upgradeCost)?'disabled':''}>${lv?`Upgrade to Lv ${lv+1}`:'Construct'}</button>
+      <div class="card"><h3>Upgrade</h3><p>Improves this building's output and unlocks stronger progression.</p><p><b>Cost:</b> ${fmt(upgradeCost.alloy)} alloy<br><b>Time:</b> ${durationText(queueSeconds(id))}</p>
+      <button data-act="upgrade:${id}" ${s.queue||locked||lv>=30||!canAfford(upgradeCost)?'disabled':''}>${lv?`Upgrade to Lv ${lv+1}`:'Construct'}</button>
       <p class="small">${s.queue?'Shared construction queue busy.':locked?'Upgrade AI Core first.':'One construction queue like a strategy game HQ.'}</p></div>
       <div class="card"><h3>Current Output</h3><p>${buildingOutputText(id)}</p>${specialActions(id)}${buildingLinks(id)}</div>
-    </div>
+    </div>${speedPanel()}
   `);
  }
  function buildingLinks(id){const links={core:[['AI','EVA & alignment'],['Missions','Campaign & daily missions'],['Legacy','Legendary brothers']],quarters:[['Commanders','Commander hall'],['Legacy','Brothers of Afterlight']],barracks:[['Commanders','Commanders'],['PvP','Military academy']],lab:[['AI','Neural doctrine']],market:[['Inventory','Inventory & exchange']],hangar:[['World','World operations'],['PvP','Advanced units']],wall:[['PvP','Defense & raids']]};return (links[id]||[]).map(([t,n])=>'<button class="buildingLink" data-act="tab:'+t+'">'+n+'</button>').join('');}
@@ -708,7 +713,7 @@ function buildingSheet(id){
    if(id==='barracks') return `<button data-act="train:guards" ${s.l.barracks<1||!canAfford({food:40,alloy:40})?'disabled':''}>Train 2 Guards · 40 food + 40 alloy</button><br><button data-act="heal" ${s.injured<1||s.l.med<1||!canAfford({water:25})?'disabled':''}>Heal 1 Injured · 25 water</button><br><button data-act="elite" ${s.l.barracks<2||s.training||!canAfford({food:80,alloy:80})?'disabled':''}>Train 2 Elite Guards · 80 food + 80 alloy · 25s</button><p class="small">Elite guards: ${s.elites} · ${s.training?timeLeft(s.training.end):'Training idle'}</p>`;
    if(id==='hangar') return `<button data-act="train:drones" ${s.l.hangar<1||!canAfford({energy:90,alloy:70,parts:1})?'disabled':''}>Build 1 Drone · 90 energy + 70 alloy + 1 part</button>`;
    if(id==='lab') return `<button data-act="research" ${s.l.lab<1||s.researchQueue||!canAfford({energy:120})?'disabled':''}>Start Research · 120 energy</button><p class="small">Research queue: ${s.researchQueue?`${s.researchQueue.name} (${timeLeft(s.researchQueue.end)})`:'Idle'}</p>`;
-   if(id==='market') return `<button data-act="buy:speed1" ${s.l.market<1||s.res.diamond<10?'disabled':''}>Buy 1m Speedup · 10 diamonds</button><br><button data-act="buy:crate" ${s.l.market<1||s.res.diamond<25?'disabled':''}>Buy Supply Crate · 25 diamonds</button>`;
+   if(id==='market') return supplyExchange()+`<button data-act="buy:crate" ${s.l.market<1||s.res.diamond<25?'disabled':''}>Buy Supply Crate · 25 diamonds</button>`;
    if(id==='med') return `<button data-act="heal" ${s.injured<1||!canAfford({water:25})?'disabled':''}>Heal 1 Injured · 25 water</button>`;
    return `<div class="small">Upgrade this structure to increase your empire power and unlock more systems.</div>`;
  }
@@ -958,6 +963,7 @@ function bagItems(){
  ['crates','Supply Crate','Special','rare','crate',s.inv.crates,'Open a supply crate for randomized supplies.','crate'],
  ['speed1','1m Speedup','Speedups','common','clock',s.inv.speed1,'Reduce active construction by 60 seconds.','speed:1'],
  ['speed5','5m Speedup','Speedups','rare','clock',s.inv.speed5,'Reduce active construction by 300 seconds.','speed:5'],
+ ...speedItems.filter(v=>v.mins>5).map(v=>['speed'+v.mins,durationText(v.mins*60)+' Speedup','Speedups',v.mins>=480?'legendary':'epic','clock',s.inv['speed'+v.mins]||0,'Reduce active construction by '+durationText(v.mins*60)+'.','speed:'+v.mins]),
  ['manuals','Training Manual','Commanders','epic','book',s.inv.manuals,'Train and improve recruited commanders.','tab:Commanders'],
  ['parts','Equipment Parts','Crafting','rare','gear',s.inv.parts,'Craft equipment and build advanced units.','tab:Frontier'],
  ['medkits','Medkit','Special','common','med',s.inv.medkits,'Stored emergency medical supplies. Direct use is not yet implemented.','open:med'],
@@ -1088,15 +1094,16 @@ function manageGear(cmdId){
    if(act==='upgrade'){
      const id=parts[1], cost={alloy:buildingCost(id)};
      if(s.queue){ s.message='Construction queue busy.'; }
+     else if((s.l[id]||0)>=30){s.message='Maximum building level reached.';}
      else if(id!=='core' && (s.l[id]||0)>=s.l.core){ s.message='Upgrade AI Core first.'; }
      else if(spend(cost)){ s.queue={id,end:Date.now()+queueSeconds(id)*1000}; s.message=`Started upgrading ${defs.find(d=>d.id===id).name}.`; closeSheet(); }
      else s.message='Not enough alloy.';
    }
    if(act==='speed'){
      const mins=Number(parts[1]);
-     const key=mins===1?'speed1':'speed5';
+     const key='speed'+mins;if(!speedItems.some(v=>v.mins===mins))return;
      if(!s.queue){ s.message='No active construction.'; }
-     else if(s.inv[key]>0){ s.inv[key]-=1; s.queue.end -= mins*60*1000; s.message=`Used a ${mins} minute speedup.`; if(s.queue.end<Date.now()) tick(); }
+     else if(s.inv[key]>0){ s.inv[key]-=1; s.queue.end -= mins*60*1000; s.message=`Used a ${mins} minute speedup.`; if(s.queue.end<=Date.now()) tick(); }
    }
    if(act==='train'){
      if(parts[1]==='guards'){
@@ -1147,9 +1154,10 @@ function manageGear(cmdId){
      else { s.inv.parts -= gearList.find(g=>g.id===gearId).cost; s.cmdGear[id].push(gearId); s.message='Gear equipped.'; closeSheet(); }
    }
    if(act==='buy'){
-     if(parts[1]==='speed1' && spend({diamond:10})){ s.inv.speed1 +=1; s.message='Purchased a 1 minute speedup.'; }
+     const speed=speedItems.find(v=>'speed'+v.mins===parts[1]);if(speed&&s.l.market>=1&&spend({diamond:speed.price})){s.inv['speed'+speed.mins]=(s.inv['speed'+speed.mins]||0)+1;s.message='Exchanged diamonds for '+durationText(speed.mins*60)+' speedup.';}
      if(parts[1]==='crate' && spend({diamond:25})){ s.inv.crates +=1; s.message='Purchased a supply crate.'; }
    }
+   if(act==='supply'){const k=parts[1];if(['alloy','food','water','energy'].includes(k)&&s.l.market>=1&&spend({diamond:25})){reward({[k]:500*Math.max(1,s.l.core)});s.message='Resource delivery collected.';}}
    if(act==='heal'){
      if(s.injured<1) s.message='No injured troops.';
      else if(s.l.med<1) s.message='Build the Infirmary first.';
