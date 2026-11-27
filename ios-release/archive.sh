@@ -29,5 +29,5 @@ test "$(plutil -extract CFBundleIdentifier raw "$app/Info.plist")" = com.fieldno
 test "$(plutil -extract DTPlatformName raw "$app/Info.plist")" = iphoneos
 test -s "$app/public/index.html"
 test -s "$app/Assets.car"
-lipo -verify_arch arm64 "$app/App"
+lipo "$app/App" -verify_arch arm64
 ditto -c -k --keepParent "$archive" "$root/build/Afterlight-device.zip"
