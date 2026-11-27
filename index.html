@@ -767,7 +767,7 @@ function safeName(v){return String(v).replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().
  const host=$('city3host');$('city3queue').textContent=s.queue?'Construction · '+timeLeft(s.queue.end):'Construction idle';
  if(city3){city3.update(defs.map(d=>({...d,lv:s.l[d.id]||0,ready:!s.queue&&(d.id==='core'||(s.l[d.id]||0)<s.l.core)&&canAfford({alloy:buildingCost(d.id)}),busy:s.queue?.id===d.id})));return;}
  if(city3Loading)return;city3Loading=true;
- (city3Module?Promise.resolve(city3Module):import('./city3d.js?v=510')).then(mod=>{city3Module=mod;if(tab!=='HQ'||!city3Enabled||host!==$('city3host'))return;host.replaceChildren();city3=mod.createCity(host,id=>buildingSheet(id),fallbackCity3);renderCity3();}).catch(e=>{if(tab==='HQ'&&city3Enabled)fallbackCity3(e.message)}).finally(()=>{city3Loading=false;});
+ (city3Module?Promise.resolve(city3Module):import('./city3d.js?v=511')).then(mod=>{city3Module=mod;if(tab!=='HQ'||!city3Enabled||host!==$('city3host'))return;host.replaceChildren();city3=mod.createCity(host,id=>buildingSheet(id),fallbackCity3);renderCity3();}).catch(e=>{if(tab==='HQ'&&city3Enabled)fallbackCity3(e.message)}).finally(()=>{city3Loading=false;});
  }
  function renderHQ(){
  if(city3Enabled){renderCity3();return;}
