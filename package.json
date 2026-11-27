@@ -1,0 +1,17 @@
+{
+  "name": "afterlight",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:web": "node scripts/stage-web.mjs",
+    "check": "node scripts/check-web.mjs",
+    "ios:prepare": "npm run build:web && cap add ios && cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.4.4",
+    "@capacitor/ios": "7.4.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.4.4"
+  }
+}
