@@ -70,6 +70,17 @@ jobs:
           path: build/ios/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
           retention-days: 7
+      - name: Check release signing setup
+        env:
+          HAS_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID != '' }}
+          HAS_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID != '' }}
+          HAS_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID != '' }}
+          HAS_ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY != '' }}
+        run: |
+          for name in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY; do
+            flag="HAS_${name}"
+            if [[ "${!flag}" != true ]]; then echo "::notice::Missing release setting: $name"; fi
+          done
       - name: Archive for iPhone
         env:
           UPLOAD_TESTFLIGHT: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_testflight && github.ref == 'refs/heads/main' }}

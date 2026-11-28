@@ -1,6 +1,7 @@
 """Prepare the generated Capacitor Android project for an API 36 release."""
 import os
 import re
+from shutil import copyfile
 from pathlib import Path
 
 
@@ -18,3 +19,11 @@ replace_setting("android/build.gradle", r"com.android.tools.build:gradle:[0-9.]+
 replace_setting("android/gradle/wrapper/gradle-wrapper.properties", r"gradle-[0-9.]+-(all|bin)", r"gradle-8.11.1-\1")
 build = int(os.environ["GITHUB_RUN_NUMBER"])
 replace_setting("android/app/build.gradle", r"versionCode [0-9]+", f"versionCode {build}")
+
+# Use the game icon for both the regular and round launcher entries.
+resources = Path("android/app/src/main/res/mipmap-xxxhdpi")
+resources.mkdir(exist_ok=True)
+copyfile("store/icon.png", resources / "afterlight_icon.png")
+manifest = "android/app/src/main/AndroidManifest.xml"
+replace_setting(manifest, r'android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/afterlight_icon"')
+replace_setting(manifest, r'android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@mipmap/afterlight_icon"')

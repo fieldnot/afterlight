@@ -11,6 +11,7 @@ on:
     paths:
       - 'index.html'
       - 'genesis-art/**'
+      - 'store/icon.png'
       - 'support/**'
       - 'city3d.js'
       - 'world3d.js'
@@ -52,6 +53,17 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Check release signing setup
+        env:
+          HAS_ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 != '' }}
+          HAS_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+          HAS_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD != '' }}
+          HAS_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS != '' }}
+        run: |
+          for name in ANDROID_UPLOAD_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS; do
+            flag="HAS_${name}"
+            if [[ "${!flag}" != true ]]; then echo "::notice::Missing release setting: $name"; fi
+          done
       - name: Sign Play bundle
         if: github.event_name == 'workflow_dispatch' && inputs.sign_bundle && github.ref == 'refs/heads/main'
         env:
