@@ -10,6 +10,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'genesis-art/**'
+      - 'support/**'
       - 'city3d.js'
       - 'world3d.js'
       - 'package.json'
